@@ -9,7 +9,7 @@ services:
     env_file:
       - .env
     environment:
-      - TZ=$(cat /etc/timezone)
+      TZ: "Europe/Moscow"
     volumes:
       - .:/app
     restart: on-failure
