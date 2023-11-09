@@ -1,0 +1,12 @@
+services:
+  bot:
+    build:
+      dockerfile: Dockerfile
+    working_dir: /app
+    command: "python main.py"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    restart: on-failure
+
