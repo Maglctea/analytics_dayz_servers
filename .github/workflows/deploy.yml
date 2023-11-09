@@ -19,7 +19,6 @@ jobs:
           username: ${{ secrets.REMOTE_FORTUHOST_USERNAME }}
           password: ${{ secrets.REMOTE_FORTUHOST_PASSWORD }}
           script: |
-            sudo su
             cd ${{ secrets.COMPOSE_PATH }}
             git pull
             docker-compose up --build -d
