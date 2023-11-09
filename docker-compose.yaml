@@ -10,5 +10,7 @@ services:
       - .env
     volumes:
       - .:/app
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     restart: on-failure
 
