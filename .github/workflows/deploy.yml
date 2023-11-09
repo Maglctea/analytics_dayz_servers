@@ -22,7 +22,6 @@ jobs:
             cd ${{ secrets.COMPOSE_PATH }}
             git pull
             docker-compose up --build -d
-        continue-on-error: true
 
       - name: Rollback commit on error
         if: steps.deployment.outcome != 'success'
