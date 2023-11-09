@@ -1,4 +1,4 @@
-# Analytics-DayZ-servers
+# Analytics DayZ servers
 
 <hr/>
 
