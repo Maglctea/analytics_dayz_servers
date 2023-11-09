@@ -8,8 +8,6 @@ services:
     command: "python main.py"
     env_file:
       - .env
-    environment:
-      TZ: "Europe/Moscow"
     volumes:
       - .:/app
     restart: on-failure
