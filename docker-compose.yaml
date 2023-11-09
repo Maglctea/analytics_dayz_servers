@@ -8,6 +8,8 @@ services:
     command: "python main.py"
     env_file:
       - .env
+    environment:
+      - TZ=$(cat /etc/timezone)
     volumes:
       - .:/app
     restart: on-failure
