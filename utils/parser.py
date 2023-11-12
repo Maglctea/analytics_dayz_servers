@@ -23,13 +23,17 @@ def get_link(id_page: int) -> str:
 
 
 async def __get_page(session: aiohttp.ClientSession, url: str) -> Optional[str]:
-    response = await session.get(url, headers=headers, ssl=False)
+    response = await session.get(url, headers=headers)
     content = await response.content.read()
     return content.decode('utf-8')
 
 
 async def get_pages(id_pages: List[int]) -> List[str]:
-    async with aiohttp.ClientSession(timeout=ClientTimeout(total=5), trust_env=True) as session:
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False),
+                                     timeout=ClientTimeout(total=5),
+                                     trust_env=True
+                                     ) as session:
+
         async with asyncio.TaskGroup() as tg:
             pages = [await tg.create_task(__get_page(session, get_link(id_page))) for id_page in id_pages]
     return pages
