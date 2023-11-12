@@ -3,6 +3,9 @@ from typing import List, Optional
 from bs4 import BeautifulSoup
 import aiohttp
 from models import Server
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def get_link(id_page: int) -> str:
@@ -10,7 +13,10 @@ def get_link(id_page: int) -> str:
 
 
 async def __get_page(session: aiohttp.ClientSession, url: str) -> str:
-    response = await session.get(url)
+    try:
+        response = await session.get(url)
+    except Exception as e:
+        logger.warning(f'Error link: {url}')
     content = await response.content.read()
     return content.decode('utf-8')
 
