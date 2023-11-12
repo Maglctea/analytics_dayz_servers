@@ -22,7 +22,7 @@ async def __get_page(session: aiohttp.ClientSession, url: str) -> str:
 
 
 async def get_pages(id_pages: List[int]) -> List[str]:
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(trust_env=True) as session:
         async with asyncio.TaskGroup() as tg:
             pages = [await tg.create_task(__get_page(session, get_link(id_page))) for id_page in id_pages]
     return pages
