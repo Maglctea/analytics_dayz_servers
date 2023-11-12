@@ -6,6 +6,7 @@ from discord.ext.commands import Context
 from settings import CHANNEL_EMBEDS_ID, TASK_UPDATE_MINUTE, GUILD_ID, BOT_TOKEN
 from utils.bot import bulid_embed, update_embeds, get_message_by_id, get_rating
 from utils.parser import get_pages, parse_page
+import tracemalloc
 
 intents = discord.Intents.all()
 
@@ -140,4 +141,5 @@ async def on_raw_reaction_add(payload: RawReactionActionEvent):
                     await reaction.remove(user)
 
 
+tracemalloc.start()
 bot.run(BOT_TOKEN)

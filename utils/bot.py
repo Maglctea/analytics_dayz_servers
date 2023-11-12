@@ -1,14 +1,16 @@
 import asyncio
+import logging
 from datetime import datetime
 from typing import Optional, AsyncIterator
-
 import aiohttp
 import discord
 from discord import Message
 from discord.ext.commands import Bot
-
+import traceback
 from models import Server
 from utils.parser import get_pages, parse_page
+
+logger = logging.getLogger(__name__)
 
 
 async def get_server_icon(invite_code: str) -> Optional[str]:
@@ -116,6 +118,7 @@ async def get_message_by_id(bot: Bot, id_channel: int, id_server: int) -> Option
 async def update_embeds(bot: Bot, channel_id: int) -> None:
     messages = await get_messages(bot, channel_id)
     async for message in messages:
+
         embed = message.embeds[0]
         try:
             id_server = int(embed.footer.text.split('|')[0])
@@ -133,6 +136,7 @@ async def update_embeds(bot: Bot, channel_id: int) -> None:
                 banner_url=embed.image.url
             )
             await message.edit(embed=embed)
+            logger.info(f'{datetime.now()}: {embed.title}: updated')
         except Exception as e:
-            print(f'Error update {type(e)} server banner: {embed.title}: {e.__traceback__.tb_lineno}')
+            logger.exception(f'{datetime.now()}: {embed.title}: {traceback.format_exc()}')
 
