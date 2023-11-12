@@ -1,6 +1,8 @@
 import asyncio
 from datetime import datetime
 from typing import List, Optional
+
+from aiohttp import ClientTimeout
 from bs4 import BeautifulSoup
 import aiohttp
 from models import Server
@@ -9,30 +11,31 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+headers = {
+    "Content-Type": "application/json",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) "
+                  "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
+}
+
+
 def get_link(id_page: int) -> str:
     return f'https://wargm.ru/server/{id_page}'
 
 
 async def __get_page(session: aiohttp.ClientSession, url: str) -> Optional[str]:
-    try:
-        response = await session.get(url, ssl=False)
-    except Exception as e:
-        logger.error(f'{datetime.now()} {url}: {e}')
-        return None
+    response = await session.get(url, headers=headers, ssl=False)
     content = await response.content.read()
     return content.decode('utf-8')
 
 
 async def get_pages(id_pages: List[int]) -> List[str]:
-    async with aiohttp.ClientSession(trust_env=True) as session:
+    async with aiohttp.ClientSession(timeout=ClientTimeout(total=5), trust_env=True) as session:
         async with asyncio.TaskGroup() as tg:
             pages = [await tg.create_task(__get_page(session, get_link(id_page))) for id_page in id_pages]
     return pages
 
 
 def parse_page(page: str) -> Optional[Server]:
-    if page is None:
-        return
 
     soup = BeautifulSoup(page, 'html.parser')
 
