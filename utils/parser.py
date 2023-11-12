@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 from typing import List, Optional
 from bs4 import BeautifulSoup
 import aiohttp
@@ -15,7 +16,7 @@ async def __get_page(session: aiohttp.ClientSession, url: str) -> str:
     try:
         response = await session.get(url)
     except Exception as e:
-        logger.warning(f'Error link: {url}')
+        logger.error(f'{datetime.now()} {url}: {e}')
         return ''
     content = await response.content.read()
     return content.decode('utf-8')
