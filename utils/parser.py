@@ -7,17 +7,16 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 def get_link(id_page: int) -> str:
     return f'https://wargm.ru/server/{id_page}'
 
 
-async def __get_page(session: aiohttp.ClientSession, url: str) -> Optional[str]:
+async def __get_page(session: aiohttp.ClientSession, url: str) -> str:
     try:
         response = await session.get(url)
     except Exception as e:
         logger.warning(f'Error link: {url}')
-        return None
+        return ''
     content = await response.content.read()
     return content.decode('utf-8')
 
