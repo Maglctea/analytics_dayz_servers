@@ -134,6 +134,5 @@ async def update_embeds(bot: Bot, channel_id: int) -> None:
             )
             await message.edit(embed=embed)
         except Exception as e:
-            print(f'Error update server banner: {embed.title}: {e}')
-
+            print(f'Error update {type(e)} server banner: {embed.title}: {e.__traceback__.tb_lineno}')
 
