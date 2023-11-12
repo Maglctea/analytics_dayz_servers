@@ -8,16 +8,17 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def get_link(id_page: int) -> str:
     return f'https://wargm.ru/server/{id_page}'
 
 
-async def __get_page(session: aiohttp.ClientSession, url: str) -> str:
+async def __get_page(session: aiohttp.ClientSession, url: str) -> Optional[str]:
     try:
-        response = await session.get(url)
+        response = await session.get(url, ssl=False)
     except Exception as e:
         logger.error(f'{datetime.now()} {url}: {e}')
-        return ''
+        return None
     content = await response.content.read()
     return content.decode('utf-8')
 
@@ -30,6 +31,9 @@ async def get_pages(id_pages: List[int]) -> List[str]:
 
 
 def parse_page(page: str) -> Optional[Server]:
+    if page is None:
+        return
+
     soup = BeautifulSoup(page, 'html.parser')
 
     server_name = soup.find('h1').text
