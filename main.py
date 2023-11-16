@@ -1,3 +1,5 @@
+import sqlite3
+
 import discord
 from discord import RawReactionActionEvent, ui, Interaction
 from discord.ext import commands, tasks
@@ -5,6 +7,7 @@ from discord.ext.commands import Context
 
 from settings import CHANNEL_EMBEDS_ID, TASK_UPDATE_MINUTE, GUILD_ID, BOT_TOKEN
 from utils.bot import bulid_embed, update_embeds, get_message_by_id, get_rating
+from utils.crud import add_server, initialize_db
 from utils.parser import get_pages, parse_page
 import tracemalloc
 
@@ -14,7 +17,7 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 
 
 class ServerInfoInput(ui.Modal, title='Questionnaire Response'):
-    invite_code = ui.TextInput(label='Инвайт код', placeholder='yqhX77nt')
+    address = ui.TextInput(label='IP адрес:порт:Query port', placeholder='127.0.0.1:2302:2305')
     mode = ui.TextInput(label='Режим игры', placeholder='Hard RP')
     registration_type = ui.TextInput(label='Вид регистрации', placeholder='Анкета + Whitelist')
     image_url = ui.TextInput(label='URL картинки банера', placeholder='https://link-to-photo.png')
@@ -27,7 +30,7 @@ class ServerInfoInput(ui.Modal, title='Questionnaire Response'):
 @bot.tree.command(name='create', description='Добавляет новый сервер в список серверов',
                   guild=discord.Object(id=GUILD_ID))
 @commands.has_permissions(administrator=True)
-async def create(interaction: Interaction, id_server: int):
+async def create(interaction: Interaction, name: str, invite_code: str):
     if not interaction.user.guild_permissions.administrator:
         await interaction.response.send_message('Недостаточно прав', ephemeral=True)
         return
@@ -36,11 +39,26 @@ async def create(interaction: Interaction, id_server: int):
     await interaction.response.send_modal(server_info)
     await server_info.wait()
 
-    pages = await get_pages([int(id_server)])
+    address, port, query_port = server_info.address.value.split(':')
+
+    con = sqlite3.connect("database.sqlite")
+    cur = con.cursor()
+    add_server(
+        con,
+        cur,
+        name,
+        address,
+        int(port),
+        int(query_port)
+    )
+    con.close()
+
+    pages = await get_pages([f'{address}:{query_port}'])
     server = parse_page(pages[0])
 
     embed = await bulid_embed(
-        invite_code=server_info.invite_code.value,
+        name=name,
+        invite_code=invite_code,
         server_info=server,
         registration=server_info.registration_type.value,
         mode=server_info.mode.value,
@@ -104,6 +122,11 @@ async def update_task():
 
 @bot.event
 async def on_ready():
+    con = sqlite3.connect("database.sqlite")
+    cur = con.cursor()
+    initialize_db(con, cur)
+    con.close()
+
     synced = await bot.tree.sync(guild=discord.Object(id=GUILD_ID))
     update_task.start()
     print(f'Синхронизировано {len(synced)} команд')

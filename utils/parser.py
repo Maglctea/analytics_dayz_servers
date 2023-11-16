@@ -10,7 +10,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 headers = {
     "Content-Type": "application/json",
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) "
@@ -18,8 +17,8 @@ headers = {
 }
 
 
-def get_link(id_page: int) -> str:
-    return f'https://wargm.ru/server/{id_page}'
+def get_link(address: int) -> str:
+    return f'https://cmsminecraftshop.com/en/query/type/sevendaystodie/ip/{address}/'
 
 
 async def __get_page(session: aiohttp.ClientSession, url: str) -> Optional[str]:
@@ -28,52 +27,44 @@ async def __get_page(session: aiohttp.ClientSession, url: str) -> Optional[str]:
     return content.decode('utf-8')
 
 
-async def get_pages(id_pages: List[int]) -> List[str]:
+async def get_pages(addresses: List[str]) -> List[str]:
     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False),
                                      timeout=ClientTimeout(total=5),
                                      trust_env=True
                                      ) as session:
-
         async with asyncio.TaskGroup() as tg:
-            pages = [await tg.create_task(__get_page(session, get_link(id_page))) for id_page in id_pages]
+            pages = [await tg.create_task(__get_page(session, get_link(address))) for address in addresses]
     return pages
 
 
 def parse_page(page: str) -> Optional[Server]:
-
     soup = BeautifulSoup(page, 'html.parser')
 
-    server_name = soup.find('h1').text
+    tables = soup.find_all("table")
+    informations = {}
+    for table in tables:
+        rows = table.find_all('tr')
+        for row in rows:
+            columns = row.find_all('td')
+            if len(columns) == 2:
+                key: str = columns[0].text
+                value: str = columns[1].text
+                informations[key.strip()] = value.strip()
 
-    elements = soup.find_all('div', {'class': 'card'})
-
-    if elements:
-        info_banner = None
-        for element in elements:
-            if 'Это мой сервер' in element.text or 'Подтвердить права' in element.text:
-                info_banner = element
-                break
-        if info_banner is None:
-            return None
-
-        info_banner = info_banner.find_all('div', {'class': 'f-r ml-5'})
+    if informations:
         server_info = Server(
-            id=int(info_banner[0].text),
-            top=int(info_banner[1].text.split()[0]),
-            status=info_banner[2].text,
-            ip=info_banner[3].text,
-            version=info_banner[4].text,
-            map=info_banner[5].text,
-            uptime=info_banner[6].text,
-            added_at=info_banner[7].text,
-            checked_at=info_banner[8].text,
-            online_at=info_banner[9].text,
-            name=server_name
+            status='Online' if informations.get('players') else 'Offline',
+            address=informations.get('gq_address'),
+            port=int(informations.get('port', -1)),
+            version=informations.get('version'),
+            map=informations.get('map'),
+            players=int(informations.get('players', 0)),
+            max_players=int(informations.get('maxplayers', 0))
         )
         return server_info
     else:
         return None
 
-# pages = asyncio.run(get_pages([68350]))
+# pages = asyncio.run(get_pages(['185.189.255.223:2303']))
 # res = parse_page(pages[0])
 # pass

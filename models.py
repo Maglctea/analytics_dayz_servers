@@ -3,14 +3,10 @@ from dataclasses import dataclass
 
 @dataclass
 class Server:
-    id: int
-    name: str
-    top: int
     status: str
-    ip: str
+    address: str
+    port: int
     version: str
     map: str
-    uptime: str
-    added_at: str
-    checked_at: str
-    online_at: str
+    players: int
+    max_players: int

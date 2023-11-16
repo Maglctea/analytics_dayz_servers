@@ -1,5 +1,5 @@
-import asyncio
 import logging
+import sqlite3
 from datetime import datetime
 from typing import Optional, AsyncIterator
 import aiohttp
@@ -8,6 +8,7 @@ from discord import Message
 from discord.ext.commands import Bot
 import traceback
 from models import Server
+from utils.crud import get_server
 from utils.parser import get_pages, parse_page
 
 logger = logging.getLogger(__name__)
@@ -25,18 +26,20 @@ async def get_server_icon(invite_code: str) -> Optional[str]:
     return None
 
 
-async def bulid_embed(invite_code: str = None,
-                      server_info: Server = None,
-                      registration: str = None,
-                      mode: str = None,
-                      rating: float = None,
-                      description: str = None,
-                      bot_icon: str = None,
-                      banner_url: str = None
-                      ) -> discord.Embed:
+async def bulid_embed(
+        name: str,
+        invite_code: str = None,
+        server_info: Server = None,
+        registration: str = None,
+        mode: str = None,
+        rating: float = None,
+        description: str = None,
+        bot_icon: str = None,
+        banner_url: str = None
+) -> discord.Embed:
 
     embed = discord.Embed(
-        title=server_info.name,
+        title=name,
         description=description,
         color=discord.Color.red()
     )
@@ -57,21 +60,22 @@ async def bulid_embed(invite_code: str = None,
         value=mode,
         inline=True
     )
-    embed.add_field(
-        name='Карта',
-        value=server_info.map,
-        inline=True
-    )
-    embed.add_field(
-        name=':busts_in_silhouette: Статус',
-        value=f'{"🟢" if server_info.status[1] == "n" else "🔴"} {server_info.status}',
-        inline=True
-    )
-    embed.add_field(
-        name=f':link: {server_info.ip}',
-        value='\u200b',  # Невидимое значение, чтобы создать отступ
-        inline=False
-    )
+    if server_info is not None:
+        embed.add_field(
+            name='Карта',
+            value=server_info.map,
+            inline=True
+        )
+        embed.add_field(
+            name=':busts_in_silhouette: Статус',
+            value=f'{"🟢" if server_info.status[1] == "n" else "🔴"} {server_info.status} {server_info.players}/{server_info.max_players}',
+            inline=True
+        )
+        embed.add_field(
+            name=f':link: {server_info.address}:{server_info.port}',
+            value='\u200b',  # Невидимое значение, чтобы создать отступ
+            inline=False
+        )
 
     embed.set_thumbnail(url=f'http://fb79092i.beget.tech/SDCScores/{float(rating)}')
 
@@ -80,7 +84,7 @@ async def bulid_embed(invite_code: str = None,
     now = datetime.now()
     formatted_date = now.strftime("%d.%m.%Y %H:%M:%S")
     embed.set_footer(icon_url=bot_icon,
-                     text=f'{server_info.id} | Всего голосов {""} | Дата обновления {formatted_date}')
+                     text=f'Дата обновления {formatted_date}')
 
     return embed
 
@@ -117,17 +121,28 @@ async def get_message_by_id(bot: Bot, id_channel: int, id_server: int) -> Option
 
 async def update_embeds(bot: Bot, channel_id: int) -> None:
     messages = await get_messages(bot, channel_id)
+    con = sqlite3.connect("database.sqlite")
+    cur = con.cursor()
     async for message in messages:
 
         embed = message.embeds[0]
         try:
-            id_server = int(embed.footer.text.split('|')[0])
-            pages = await get_pages([id_server])
+            pages = None
+            full_address = message.embeds[0].fields[4].name.split(' ')[-1]
+            address, port = full_address.split(':')
+            server_info = get_server(cur, address=address)
+            if server_info is None:
+                server_id, name, address, port, query_port = None, None, None, None, None
+            else:
+                server_id, name, address, port, query_port = server_info
+                pages = await get_pages([f'{address}:{query_port}'])
+
             fields = embed.fields
 
             embed = await bulid_embed(
+                name=name,
                 invite_code=embed.author.url.split('/')[-1],
-                server_info=parse_page(pages[0]),
+                server_info=parse_page(pages[0]) if pages else None,
                 registration=fields[0].value,
                 mode=fields[1].value,
                 rating=await get_rating(message),
@@ -139,4 +154,4 @@ async def update_embeds(bot: Bot, channel_id: int) -> None:
             logger.info(f'{datetime.now()}: {embed.title}: updated')
         except Exception as e:
             logger.exception(f'{datetime.now()}: {embed.title}: {traceback.format_exc()}')
-
+    con.close()
