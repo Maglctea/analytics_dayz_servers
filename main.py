@@ -52,7 +52,6 @@ async def create(interaction: Interaction, name: str, invite_code: str):
         invite_code=invite_code,
         banner_url=server_info.image_url.value
     )
-    add_server(server)
 
     pages = await get_pages([f'{address}:{query_port}'])
 
@@ -66,6 +65,8 @@ async def create(interaction: Interaction, name: str, invite_code: str):
     )
 
     message = await interaction.channel.send(embed=embed)
+    server.message_id = message.id
+    add_server(server)
 
     for i in range(1, 6):
         emoji = f'{i}\u20e3'  # Получаем соответствующий эмодзи
