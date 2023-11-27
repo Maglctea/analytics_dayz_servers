@@ -76,7 +76,8 @@ async def create(interaction: Interaction, name: str, invite_code: str):
 @bot.tree.command(name='update', description='Добавляет новый сервер в список серверов',
                   guild=discord.Object(id=GUILD_ID))
 @commands.has_permissions(administrator=True)
-async def update(interaction: Interaction, message_id: int, invite_code: str = None):
+async def update(interaction: Interaction, message_id: str, invite_code: str = None):
+    message_id = int(message_id)
     if not interaction.user.guild_permissions.administrator:
         await interaction.response.send_message('Недостаточно прав', ephemeral=True)
         return
