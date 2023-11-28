@@ -5,7 +5,7 @@ from discord import RawReactionActionEvent, ui, Interaction
 from discord.ext import commands, tasks
 from discord.ext.commands import Context
 
-from database.orm import add_server, get_server
+from database.orm import add_server, get_server, update_server
 from schemes import ServerInfo
 from settings import CHANNEL_EMBEDS_ID, TASK_UPDATE_MINUTE, GUILD_ID, BOT_TOKEN
 from utils.bot import bulid_embed, update_embeds, get_rating, get_message_by_message_id
@@ -101,7 +101,6 @@ async def update(interaction: Interaction, message_id: str, invite_code: str = N
     address, port, query_port = server_info.address.value.split(':')
 
     new_server_info = ServerInfo(
-
         name=server.name,
         address=address,
         query_port=query_port,
@@ -124,6 +123,7 @@ async def update(interaction: Interaction, message_id: str, invite_code: str = N
         bot_icon=bot.user.display_avatar.url,
     )
 
+    update_server(new_server_info)
     await message.edit(embed=embed)
 
 
