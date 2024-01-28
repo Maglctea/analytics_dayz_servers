@@ -6,7 +6,7 @@ import aiohttp
 from aiohttp import ClientTimeout
 from bs4 import BeautifulSoup
 
-from src.aplication.models.server import ServerBannerInfo
+from dayz.application.models.server import ServerBannerInfo
 
 logger = logging.getLogger(__name__)
 

@@ -1,5 +1,5 @@
 from sqladmin import ModelView
-from src.models.server import ServerModel
+from dayz.models.server import ServerModel
 
 
 class ServerAdmin(ModelView, model=ServerModel):

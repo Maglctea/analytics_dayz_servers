@@ -3,7 +3,8 @@ import hashlib
 from fastapi.requests import Request
 from sqladmin.authentication import AuthenticationBackend
 
-from src import settings
+from dayz import settings
+from dayz.admin_panel.service import get_user
 
 
 class AdminAuth(AuthenticationBackend):
@@ -13,18 +14,13 @@ class AdminAuth(AuthenticationBackend):
         password = form.get('password', '').encode('utf8')
         hashpass = hashlib.sha256(password)
 
+        user = get_user(
+            username=username,
+            password=hashpass.hexdigest()
+        )
 
-        # engine = create_session_maker()
-        # session = new_session(engine)
-        # gate = UserGateway(next(session))
-        #
-        # user = gate.get_user(
-        #     username=username,
-        #     password=hashpass.hexdigest()
-        # )
-        #
-        # if user is None:
-        #     return False
+        if user is None:
+            return False
 
         request.session.update({"auth_status": "success"})
         return True
@@ -35,10 +31,8 @@ class AdminAuth(AuthenticationBackend):
 
     async def authenticate(self, request: Request) -> bool:
         status = request.session.get("auth_status")
-        if not status or status != "success":
-            return False
+        return status or status == "success"
 
-        return True
 
 
 authentication_backend = AdminAuth(secret_key=settings.ADMIN_PANEL_SECRET_KEY)

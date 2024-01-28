@@ -22,3 +22,4 @@ alembic==1.13.1
 psycopg2-binary==2.9.9
 pydantic~=2.5.3
 fastapi~=0.109.0
+itsdangerous==2.1.2
