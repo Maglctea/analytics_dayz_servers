@@ -7,12 +7,12 @@ from discord import RawReactionActionEvent, Interaction, InteractionResponse, No
 from discord.ext import commands, tasks
 from discord.ext.commands import Context
 
-from src import settings
-from src.aplication.models.server import ServerEmbedData, ServerData
-from src.bot.utils.bot import get_server_icon
-from src.bot.forms import ServerInfoInput
-from src.bot.service.server import get_embed, add_server, delete_server, update_embeds_service, update_top
-from src.settings import CHANNEL_EMBEDS_ID
+from dayz import settings
+from dayz.application.models.server import ServerEmbedData, ServerData
+from dayz.bot.forms import ServerInfoInput
+from dayz.bot.service.server import get_embed, add_server, delete_server, update_embeds_service, update_top
+from dayz.bot.utils.bot import get_server_icon
+from dayz.settings import CHANNEL_EMBEDS_ID
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ async def create(
         name: str,
         invite_code: str
 ):
-    response: InteractionResponse = interaction.response
+    response: InteractionResponse = interaction.response  # type: ignore
     if not interaction.user.guild_permissions.administrator:
         await response.send_message(
             content='Недостаточно прав',
@@ -90,7 +90,7 @@ async def update_server_banners():
 @tasks.loop(hours=settings.TOP_UPDATE_HOURS)
 async def update_server_top():
     date = datetime.now()
-    if date.day != 1:
+    if date.day != settings.NUMBER_DAY_UPDATE_TOP:
         return
 
     logger.info('Start update server top')
@@ -98,8 +98,8 @@ async def update_server_top():
         bot=bot,
         embed_channel_id=settings.CHANNEL_EMBEDS_ID,
         top_channel_id=settings.CHANNEL_TOP_ID,
-        required_reaction_count=10,
-        placing_count=5
+        required_reaction_count=settings.REQUIRED_REACTION_COUNT,
+        placing_count=settings.PLACING_TOP_COUNT
     )
 
 
@@ -134,7 +134,7 @@ async def delete(
         interaction: Interaction,
         message_id: str
 ) -> None:
-    response: InteractionResponse = interaction.response
+    response: InteractionResponse = interaction.response  # type: ignore
     message_id = int(message_id)
     delete_server(message_id)
 

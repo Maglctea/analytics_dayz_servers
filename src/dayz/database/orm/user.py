@@ -1,6 +1,9 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from src.models.user import UserModel
+
+from dayz.application.models.user import UserData
+from dayz.database.core import create_session_maker, new_session
+from dayz.models.user import UserModel
 
 
 class UserGateway:
@@ -11,14 +14,10 @@ class UserGateway:
             self,
             username: str,
             password: str
-    ):
+    ) -> UserData | None:
         stmt = select(UserModel).filter(UserModel.username == username, UserModel.password == password)
         user = self.session.scalar(stmt)
-        return user
 
-# engine = create_session_maker()
-# session = new_session(engine)
-# gate = UserGateway(session=next(session))
-#
-# user = gate.get_user('admin', 'admindayz_4632')
-# pass
+        if user:
+            return user.to_dataclass()
+        return None

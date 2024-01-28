@@ -5,12 +5,12 @@ from datetime import datetime
 from discord import Embed, NotFound
 from discord.ext.commands import Bot
 
-from src.aplication.models.server import ServerBannerInfo, ServerEmbedData, ServerData
-from src.bot.utils.bot import build_embed, get_message_by_message_id, get_rating, get_messages, is_enough_reactions, \
+from dayz.application.models.server import ServerBannerInfo, ServerEmbedData, ServerData
+from dayz.bot.utils.bot import build_embed, get_message_by_message_id, get_rating, get_messages, is_enough_reactions, \
     get_reactions_count, bulid_top_embed
-from src.bot.utils.parser import parse_page, get_pages
-from src.database.core import create_session_maker, new_session
-from src.database.orm.server import ServerGateway
+from dayz.bot.utils.parser import parse_page, get_pages
+from dayz.database.core import create_session_maker, new_session
+from dayz.database.orm.server import ServerGateway
 
 logger = logging.getLogger(__name__)
 

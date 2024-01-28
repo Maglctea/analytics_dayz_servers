@@ -3,7 +3,7 @@ from typing import Iterable
 from sqlalchemy import create_engine, Engine
 from sqlalchemy.orm import sessionmaker, Session
 
-from src import settings
+from dayz import settings
 
 
 def get_engine() -> Engine:

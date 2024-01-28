@@ -1,8 +1,8 @@
 from sqlalchemy import Text, BIGINT
 from sqlalchemy.orm import Mapped, mapped_column, registry
 
-from src.aplication.models.server import ServerData
-from src.models.base import BaseModel
+from dayz.application.models.server import ServerData
+from dayz.models.base import BaseModel
 
 mapper_registry = registry()
 
@@ -37,20 +37,19 @@ class ServerModel(BaseModel):
             invite_code=self.invite_code,
             banner_url=self.banner_url,
             message_id=self.message_id
-
         )
 
-
-def to_model(server: ServerData) -> ServerModel:
-    return ServerModel(
-        name=server.name,
-        address=server.address,
-        port=server.port,
-        query_port=server.query_port,
-        mode=server.mode,
-        registration_type=server.registration_type,
-        description=server.description,
-        invite_code=server.invite_code,
-        banner_url=server.banner_url,
-        message_id=server.message_id
-    )
+    @staticmethod
+    def to_model(server: ServerData) -> 'ServerModel':
+        return ServerModel(
+            name=server.name,
+            address=server.address,
+            port=server.port,
+            query_port=server.query_port,
+            mode=server.mode,
+            registration_type=server.registration_type,
+            description=server.description,
+            invite_code=server.invite_code,
+            banner_url=server.banner_url,
+            message_id=server.message_id
+        )

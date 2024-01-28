@@ -2,8 +2,8 @@ from sqlalchemy import or_
 from sqlalchemy import select, delete, update
 from sqlalchemy.orm import Session
 
-from src.aplication.models.server import ServerData
-from src.models.server import ServerModel, to_model
+from dayz.application.models.server import ServerData
+from dayz.models.server import ServerModel
 
 
 class ServerGateway:
@@ -17,7 +17,7 @@ class ServerGateway:
             self,
             server: ServerData
     ) -> None:
-        self.session.add(to_model(server))
+        self.session.add(ServerModel.to_model(server))
 
     def update_server(
             self,
@@ -30,7 +30,7 @@ class ServerGateway:
             .values(values)
         )
 
-        self.session.execute(stmt)  # .scalar_one()
+        self.session.execute(stmt)
         self.session.commit()
 
     def get_server(
@@ -48,7 +48,9 @@ class ServerGateway:
             )
         )
         server_scalar = self.session.scalar(stmt)
-        return server_scalar.to_dataclass()
+        if server_scalar:
+            return server_scalar.to_dataclass()
+        return None
 
     def get_servers(self) -> list[ServerData]:
         stmt = select(ServerModel)
@@ -59,13 +61,6 @@ class ServerGateway:
             for server_scalar in servers_scalar
         ]
         return servers
-
-    def get_top_server(
-            self,
-            count: int
-    ) -> list[ServerData]:
-        select(ServerModel)
-        ...
 
     def delete_server(
             self,

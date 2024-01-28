@@ -5,9 +5,9 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from sqladmin import Admin
 
-from src.admin_panel.auth import authentication_backend
-from src.admin_panel.view import ServerAdmin
-from src.database.core import get_engine
+from dayz.admin_panel.auth import authentication_backend
+from dayz.admin_panel.view import ServerAdmin
+from dayz.database.core import get_engine
 
 app = FastAPI()
 

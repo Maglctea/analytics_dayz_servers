@@ -7,7 +7,7 @@ import discord
 from discord import Message
 from discord.ext.commands import Bot
 
-from src.aplication.models.server import ServerBannerInfo, ServerData
+from dayz.application.models.server import ServerBannerInfo, ServerData
 
 logger = logging.getLogger(__name__)
 
