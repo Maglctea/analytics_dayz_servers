@@ -14,7 +14,7 @@
 For start bot use this command:
 
 ```bash
-docker-compose up -d
+docker-compose up --env-file .env -d
 ```
 
 ## Contacts

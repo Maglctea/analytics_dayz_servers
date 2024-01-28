@@ -6,7 +6,7 @@ import aiohttp
 from aiohttp import ClientTimeout
 from bs4 import BeautifulSoup
 
-from schemes import ServerBannerInfo
+from dayz.application.models.server import ServerBannerInfo
 
 logger = logging.getLogger(__name__)
 
@@ -18,10 +18,11 @@ headers = {
 
 
 def get_link(address: str) -> str:
-    return f'https://cmsminecraftshop.com/en/query/type/sevendaystodie/ip/{address}/'
+    return f'https://cmsminecraftshop.com/en/query/type/sevendaystodie/ip/{address}/ajax/'
 
 
 async def _get_page(session: aiohttp.ClientSession, url: str) -> Optional[str]:
+    await session.get(url, headers=headers)
     response = await session.get(url, headers=headers)
     content = await response.content.read()
     return content.decode('utf-8')
