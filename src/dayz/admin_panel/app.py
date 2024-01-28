@@ -25,11 +25,3 @@ async def admin_panel():
     return RedirectResponse('admin/')
 
 
-if __name__ == "__main__":
-    uvicorn.run(
-        "app:app",
-        host="127.0.0.1",
-        port=int(os.environ.get("PORT", 8000)),
-        log_level="info",
-        workers=2,
-    )

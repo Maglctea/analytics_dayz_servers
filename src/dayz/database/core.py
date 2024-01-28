@@ -34,4 +34,7 @@ def create_session_maker() -> sessionmaker:
 
 def new_session(session_maker: sessionmaker) -> Iterable[Session]:
     with session_maker() as session:
-        yield session
+        try:
+            yield session
+        finally:
+            session.close()
