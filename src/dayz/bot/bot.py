@@ -117,12 +117,19 @@ async def on_ready() -> None:
     guild=discord.Object(id=settings.GUILD_ID)
 )
 @commands.has_permissions(administrator=True)
-async def update(ctx: Context):
-    await ctx.message.delete()
-    if not ctx.author.guild_permissions.administrator:
-        return
+async def update(interaction: Interaction):
+    response: InteractionResponse = interaction.response  # type: ignore
     await update_embeds_service(bot, settings.CHANNEL_EMBEDS_ID)
 
+    embed = discord.Embed(
+        title='✅ Начинаю обновление!',
+        color=discord.Color.blue()
+    )
+
+    await response.send_message(
+        embed=embed,
+        ephemeral=True
+    )
 
 @bot.tree.command(
     name='delete',
