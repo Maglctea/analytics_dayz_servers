@@ -71,6 +71,7 @@ async def create(
         add_server(server_info)
     except Exception as e:
         await message.delete()
+        logger.exception(f"Can't save server to database {e}")
         print(f'Error {e}')
         return
 
