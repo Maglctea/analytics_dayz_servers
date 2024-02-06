@@ -72,6 +72,7 @@ async def create(
     except Exception as e:
         await message.delete()
         print(f'Error {e}')
+        return
 
     for i in range(1, 6):
         emoji = f'{i}\u20e3'  # Получаем соответствующий эмодзи
@@ -119,8 +120,6 @@ async def on_ready() -> None:
 @commands.has_permissions(administrator=True)
 async def update(interaction: Interaction):
     response: InteractionResponse = interaction.response  # type: ignore
-    await update_embeds_service(bot, settings.CHANNEL_EMBEDS_ID)
-
     embed = discord.Embed(
         title='✅ Начинаю обновление!',
         color=discord.Color.blue()
@@ -130,6 +129,7 @@ async def update(interaction: Interaction):
         embed=embed,
         ephemeral=True
     )
+    await update_embeds_service(bot, settings.CHANNEL_EMBEDS_ID)
 
 @bot.tree.command(
     name='delete',
