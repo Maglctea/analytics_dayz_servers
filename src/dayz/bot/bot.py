@@ -3,15 +3,14 @@ import tracemalloc
 from datetime import datetime
 
 import discord
-from discord import RawReactionActionEvent, Interaction, InteractionResponse, NotFound, RawMemberRemoveEvent
+from discord import RawReactionActionEvent, Interaction, InteractionResponse, NotFound, Member, ButtonStyle
 from discord.ext import commands, tasks
-from discord.ext.commands import Context
 
 from dayz import settings
 from dayz.application.models.server import ServerEmbedData, ServerData
 from dayz.bot.forms import ServerInfoInput
 from dayz.bot.service.server import get_embed, add_server, delete_server, update_embeds_service, update_top
-from dayz.bot.utils.bot import get_server_icon
+from dayz.bot.utils.bot import get_server_icon, get_member_by_id
 from dayz.settings import CHANNEL_EMBEDS_ID
 
 logger = logging.getLogger(__name__)
@@ -132,6 +131,7 @@ async def update(interaction: Interaction):
     )
     await update_embeds_service(bot, settings.CHANNEL_EMBEDS_ID)
 
+
 @bot.tree.command(
     name='delete',
     description='Удаляет банер из списка серверов',
@@ -185,25 +185,37 @@ async def on_raw_reaction_add(payload: RawReactionActionEvent) -> None:
 
 
 @bot.event
-async def on_raw_member_remove(payload: RawMemberRemoveEvent) -> None:
-    user = payload.user
+async def on_member_join(member: Member) -> None:
+    message_author = await get_member_by_id(
+        bot=bot,
+        user_id=settings.GUILDMASTER_ID
+    )
     invite_code = settings.SERVER_INVITE_CODE
     embed = discord.Embed(
-        title='Прощание?',
-        description="""Нам очень жаль что вы покинули наше сообщество, мы действительно негодуем почему так случилось.
-                    Спасибо что были с нами и мы надеемся что вы вернитесь к нам ещё!
-                    С уважением администрация COD RP!""",
-        color=discord.Color.blue()
+        description="""
+            Приветствую тебя любитель DayZ RP!
+            Я KOLOV !
+            Я рад приветствовать тебя на нашем замечательном камьюнити, которое создано специально, что бы тебе было проще найти себе проект по душе!
+            На нашем камьюнити добавлена система оценок и отзывов, ты можешь выбрать себе проект основываясь на них, а так же и сам оценить какой либо из проектов!
+            У нас представлены самые разные проекты как по тематике Сталкера, или как тебе например РП сервер по тематике The Elder Scrolls: Skyrim!?
+            Будь как дома, выбирай просто и без долгих поисков!
+        """,
+        color=discord.Color.green()
     )
     embed.set_author(
-        name='Нажми, чтобы перейти на сервер',
+        name=message_author.display_name,
+        icon_url=message_author.avatar.url
+    )
+    button = discord.ui.Button(
+        label='На сервер',
+        style=ButtonStyle.link,
         url=f'https://discord.gg/{invite_code}',
-        icon_url=await get_server_icon(invite_code)
+        emoji='🔗'
     )
     try:
-        await user.send(embed=embed)
+        await member.send(embed=embed, view=discord.ui.View().add_item(button))
     except discord.Forbidden:
-        logging.exception(f'Error sending private message to {user}')
+        logging.exception(f'Error sending private message to {member}')
 
 
 tracemalloc.start()

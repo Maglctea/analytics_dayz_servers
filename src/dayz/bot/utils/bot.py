@@ -4,7 +4,7 @@ from typing import Optional, AsyncIterator
 
 import aiohttp
 import discord
-from discord import Message
+from discord import Message, User
 from discord.ext.commands import Bot
 
 from dayz.application.models.server import ServerBannerInfo, ServerData
@@ -197,6 +197,14 @@ async def get_message_by_message_id(
     channel = bot.get_channel(id_channel)
     message = await channel.fetch_message(message_id)
     return message
+
+
+async def get_member_by_id(
+        bot: Bot,
+        user_id: int
+) -> User:
+    user = await bot.fetch_user(user_id)
+    return user
 
 
 def get_reactions_count(message: Message) -> int:
