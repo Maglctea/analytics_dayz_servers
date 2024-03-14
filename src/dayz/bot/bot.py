@@ -3,14 +3,15 @@ import tracemalloc
 from datetime import datetime
 
 import discord
-from discord import RawReactionActionEvent, Interaction, InteractionResponse, NotFound, Member, ButtonStyle
+from discord import RawReactionActionEvent, Interaction, InteractionResponse, NotFound, Member, ButtonStyle, User
 from discord.ext import commands, tasks
 
 from dayz import settings
 from dayz.application.models.server import ServerEmbedData, ServerData
 from dayz.bot.forms import ServerInfoInput
+from dayz.bot.service.reactions import clear_user_reactions
 from dayz.bot.service.server import get_embed, add_server, delete_server, update_embeds_service, update_top
-from dayz.bot.utils.bot import get_server_icon, get_member_by_id
+from dayz.bot.utils.bot import get_user_by_id
 from dayz.settings import CHANNEL_EMBEDS_ID
 
 logger = logging.getLogger(__name__)
@@ -113,6 +114,59 @@ async def on_ready() -> None:
 
 
 @bot.tree.command(
+    name='clear_reactions',
+    description='Удаляет все оценки пользователя',
+    guild=discord.Object(id=settings.GUILD_ID)
+)
+@commands.has_permissions(administrator=True)
+async def clear_reactions(
+        interaction: Interaction,
+        user: User = None,
+        user_id: str = None
+):
+    response: InteractionResponse = interaction.response  # type: ignore
+
+    if user is None:
+        if user_id is None:
+            embed = discord.Embed(
+                title='🛑 Не указан пользователь!',
+                color=discord.Color.red()
+            )
+            await response.send_message(
+                embed=embed,
+                ephemeral=True
+            )
+            return
+
+        user = await get_user_by_id(
+            bot=bot,
+            user_id=int(user_id)
+        )
+
+    embed = discord.Embed(
+        title='✅  Начинаю удаление реакций!',
+        description='Отчет будет отправлен в ЛС после завершения операции. Время операции может занять более 5 минут',
+        color=discord.Color.blue()
+    )
+    await response.send_message(
+        embed=embed,
+        ephemeral=True,
+    )
+
+    logs_embed = await clear_user_reactions(
+        bot=bot,
+        id_channel=settings.CHANNEL_EMBEDS_ID,
+        user=user
+    )
+    try:
+        await interaction.user.send(
+            embed=logs_embed
+        )
+    except discord.Forbidden as e:
+        logger.exception(f'Ошибка отправки сообщения для {interaction.user}: {str(e)}')
+
+
+@bot.tree.command(
     name='update',
     description='Запускает обновление списка серверов серверов',
     guild=discord.Object(id=settings.GUILD_ID)
@@ -186,7 +240,7 @@ async def on_raw_reaction_add(payload: RawReactionActionEvent) -> None:
 
 @bot.event
 async def on_member_join(member: Member) -> None:
-    message_author = await get_member_by_id(
+    message_author = await get_user_by_id(
         bot=bot,
         user_id=settings.GUILDMASTER_ID
     )

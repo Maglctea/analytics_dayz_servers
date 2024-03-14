@@ -199,7 +199,7 @@ async def get_message_by_message_id(
     return message
 
 
-async def get_member_by_id(
+async def get_user_by_id(
         bot: Bot,
         user_id: int
 ) -> User:
