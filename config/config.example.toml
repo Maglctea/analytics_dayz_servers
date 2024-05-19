@@ -1,0 +1,40 @@
+[db]
+host = "localhost"
+port = 5432
+database = "postgesql"
+user = "postgesql"
+password = "postgesql"
+echo = true
+driver = "asyncpg"
+db_type = "postgresql"
+
+[api]
+host = "0.0.0.0"
+port = 8100
+debug = true
+
+[admin]
+host = "0.0.0.0"
+port = 8200
+debug = true
+secret_key = "super_secret_key"
+
+[auth]
+secret_key = "secret_key"
+algorithm = "HS256"
+token_expire_minutes = 60
+
+[bot]
+channel_embeds_id = 1163130507098333184
+channel_top_id = 1191682457024594020
+forum_feedback_id = 1237137663547543563
+guild_id = 416292549884641282
+guildmaster_id = 289031678490312715
+task_update_minute = 10
+top_update_hours = 24
+number_day_update_top = 1
+placing_top_count = 5
+required_reaction_count = 20
+bot_token = "MTE2MzEzNTMwMzQ5ODg3NTA2MQ.G36hOQ.oal8ft-uRP-gWTzOeIEs7Fetb0bcxVfbZQGmKY"
+server_invite_code = "QEMtdw8RJX"
+debug = false
