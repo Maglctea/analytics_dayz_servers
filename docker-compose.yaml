@@ -5,7 +5,7 @@ services:
     build:
       context: .
     working_dir: /app/
-    command: sh -c "alembic upgrade head && cd src && python -m dayz.bot.bot"
+    command: sh -c "alembic upgrade head && cd src && python -m dayz.presentation.bot.main"
 
     env_file:
       - .env
@@ -39,7 +39,7 @@ services:
     build:
       context: .
     working_dir: /app/src
-    command: "uvicorn dayz.presentation.admin:main --host 0.0.0.0 --port 8000;"
+    command: sh -c "python -m dayz.presentation.admin.main;"
     env_file:
       - .env
     depends_on:
