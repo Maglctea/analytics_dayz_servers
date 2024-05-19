@@ -35,6 +35,6 @@ top_update_hours = 24
 number_day_update_top = 1
 placing_top_count = 5
 required_reaction_count = 20
-bot_token = "MTE2MzEzNTMwMzQ5ODg3NTA2MQ.G36hOQ.oal8ft-uRP-gWTzOeIEs7Fetb0bcxVfbZQGmKY"
+bot_token = "BOT_TOKEN"
 server_invite_code = "QEMtdw8RJX"
 debug = false
