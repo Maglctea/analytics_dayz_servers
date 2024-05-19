@@ -51,7 +51,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     restart: on-failure
     ports:
-      - "3535:8000"
+      - "8100:8100"
 
   rabbitmq:
     image: rabbitmq:3.10.7-management

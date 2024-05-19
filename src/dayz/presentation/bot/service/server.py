@@ -2,6 +2,7 @@ import logging
 import traceback
 from datetime import datetime
 
+import discord
 from discord import Embed, NotFound
 from discord.ext.commands import Bot
 
@@ -70,12 +71,12 @@ async def update_embeds_service(
 
 
 async def update_top(
-    bot: Bot,
-    embed_channel_id: int,
-    top_channel_id: int,
-    required_reaction_count: int,
-    placing_count: int,
-    server_gateway: IServerGateway
+        bot: Bot,
+        embed_channel_id: int,
+        top_channel_id: int,
+        required_reaction_count: int,
+        placing_count: int,
+        server_gateway: IServerGateway
 ) -> None:
     filter_message_list = [
         message
@@ -91,6 +92,9 @@ async def update_top(
         key=lambda message: (-get_rating(message), -get_reactions_count(message))
     )
 
+    channel = bot.get_channel(top_channel_id)
+    await channel.purge(limit=100, bulk=True)
+
     embeds = []
     for message in sorted_message_list[:placing_count]:
         server_data = await server_gateway.get_server(message_id=message.id)
@@ -101,11 +105,14 @@ async def update_top(
             rating=round(get_rating(message), 1),
             bot_icon=bot.user.display_avatar.url,
         )
-        embeds.append(embed)
 
-    channel = bot.get_channel(top_channel_id)
-
-    await channel.purge(limit=100, bulk=True)
+        server_link = 'https://discord.com/channels/416292549884641282'
+        button_view = (
+            discord.ui.View()
+            .add_item(discord.ui.Button(emoji='🔗', label='Карточка сервера', url=f'{server_link}/{server_data.forum_id}'))
+            .add_item(discord.ui.Button(emoji='🔗', label='Отзывы сервера', url=f'{server_link}/1163130507098333184/{server_data.message_id}'))
+        )
+        await channel.send(embed=embed, view=button_view)
     try:
         await channel.send(
             embeds=embeds
