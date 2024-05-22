@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import sys
 from datetime import datetime
 
 import discord
@@ -24,6 +25,8 @@ from dayz.presentation.bot.service.server import get_embed, update_embeds_servic
 from dayz.presentation.bot.utils.bot import get_message_by_message_id, get_forum_channel_by_name, get_user_by_id
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.StreamHandler(sys.stdout))
 
 bot = commands.Bot(
     command_prefix='!',
@@ -95,7 +98,7 @@ async def delete_server_handle(server: ServerDTO) -> None:
 
 @bot.event
 async def on_ready():
-    print('ready')
+    logger.info('Bot started')
     await broker.start()
     update_server_banners.start()
     update_server_top.start()
@@ -104,12 +107,14 @@ async def on_ready():
 @tasks.loop(minutes=bot_config.task_update_minute)
 async def update_server_banners():
     logger.info('Start embeds update')
-    server_gateway: IServerGateway = await container.get(IServerGateway)
-    await update_embeds_service(
-        bot=bot,
-        channel_id=bot_config.channel_embeds_id,
-        server_gateway=server_gateway
-    )
+
+    async with container() as request_container:
+        server_gateway: IServerGateway = await request_container.get(IServerGateway)
+        await update_embeds_service(
+            bot=bot,
+            channel_id=bot_config.channel_embeds_id,
+            server_gateway=server_gateway
+        )
 
 
 @tasks.loop(hours=bot_config.top_update_hours)
@@ -118,16 +123,17 @@ async def update_server_top():
     if date.day != bot_config.number_day_update_top:
         return
 
-    server_gateway: IServerGateway = await container.get(IServerGateway)
-    logger.info('Start update server top')
-    await update_top(
-        server_gateway=server_gateway,
-        bot=bot,
-        embed_channel_id=bot_config.channel_embeds_id,
-        top_channel_id=bot_config.channel_top_id,
-        required_reaction_count=bot_config.required_reaction_count,
-        placing_count=bot_config.placing_top_count
-    )
+    async with container() as request_container:
+        server_gateway: IServerGateway = await request_container.get(IServerGateway)
+        logger.info('Start update server top')
+        await update_top(
+            server_gateway=server_gateway,
+            bot=bot,
+            embed_channel_id=bot_config.channel_embeds_id,
+            top_channel_id=bot_config.channel_top_id,
+            required_reaction_count=bot_config.required_reaction_count,
+            placing_count=bot_config.placing_top_count
+        )
 
 
 @bot.tree.command(
@@ -141,18 +147,19 @@ async def update(interaction: Interaction):
         title='✅ Начинаю обновление!',
         color=discord.Color.blue()
     )
-    server_gateway: IServerGateway = await container.get(IServerGateway)
+    async with container() as request_container:
+        server_gateway: IServerGateway = await request_container.get(IServerGateway)
 
-    await response.send_message(  # type: ignore
-        embed=embed,
-        ephemeral=True
-    )
+        await response.send_message(  # type: ignore
+            embed=embed,
+            ephemeral=True
+        )
 
-    await update_embeds_service(
-        bot=bot,
-        channel_id=bot_config.channel_embeds_id,
-        server_gateway=server_gateway
-    )
+        await update_embeds_service(
+            bot=bot,
+            channel_id=bot_config.channel_embeds_id,
+            server_gateway=server_gateway
+        )
 
 
 @bot.tree.command(

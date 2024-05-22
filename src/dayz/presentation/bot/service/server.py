@@ -1,4 +1,5 @@
 import logging
+import sys
 import traceback
 from datetime import datetime
 
@@ -13,6 +14,8 @@ from dayz.presentation.bot.utils.bot import build_embed, get_message_by_message_
     bulid_top_embed
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.StreamHandler(sys.stdout))
 
 
 async def parse_page_service(
