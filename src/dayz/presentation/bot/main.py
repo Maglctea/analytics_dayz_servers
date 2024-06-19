@@ -5,7 +5,7 @@ import sys
 from datetime import datetime
 
 import discord
-from discord import Interaction, User
+from discord import Interaction, User, ButtonStyle, Member
 from discord.ext import commands, tasks
 from dishka import make_async_container, AsyncContainer
 from faststream import FastStream
@@ -102,6 +102,40 @@ async def on_ready():
     await broker.start()
     update_server_banners.start()
     update_server_top.start()
+
+
+@bot.event
+async def on_member_join(member: Member) -> None:
+    message_author = await get_user_by_id(
+        bot=bot,
+        user_id=bot_config.guildmaster_id
+    )
+    invite_code = bot_config.server_invite_code
+    embed = discord.Embed(
+        description="""
+            Приветствую тебя любитель DayZ RP!
+            Я KOLOV !
+            Я рад приветствовать тебя на нашем замечательном камьюнити, которое создано специально, что бы тебе было проще найти себе проект по душе!
+            На нашем камьюнити добавлена система оценок и отзывов, ты можешь выбрать себе проект основываясь на них, а так же и сам оценить какой либо из проектов!
+            У нас представлены самые разные проекты как по тематике Сталкера, или как тебе например РП сервер по тематике The Elder Scrolls: Skyrim!?
+            Будь как дома, выбирай просто и без долгих поисков!
+        """,
+        color=discord.Color.green()
+    )
+    embed.set_author(
+        name=message_author.display_name,
+        icon_url=message_author.avatar.url
+    )
+    button = discord.ui.Button(
+        label='На сервер',
+        style=ButtonStyle.link,
+        url=f'https://discord.gg/{invite_code}',
+        emoji='🔗'
+    )
+    try:
+        await member.send(embed=embed, view=discord.ui.View().add_item(button))
+    except discord.Forbidden:
+        logging.exception(f'Error sending private message to {member}')
 
 
 @tasks.loop(minutes=bot_config.task_update_minute)
