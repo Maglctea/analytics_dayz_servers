@@ -5,7 +5,7 @@ import sys
 from datetime import datetime
 
 import discord
-from discord import Interaction, User, ButtonStyle, Member
+from discord import Interaction, User, ButtonStyle, Member, RawReactionActionEvent
 from discord.ext import commands, tasks
 from dishka import make_async_container, AsyncContainer
 from faststream import FastStream
@@ -102,6 +102,24 @@ async def on_ready():
     await broker.start()
     update_server_banners.start()
     update_server_top.start()
+
+
+@bot.event
+async def on_raw_reaction_add(payload: RawReactionActionEvent):
+    user = payload.member
+
+    if payload.channel_id != bot_config.channel_embeds_id or user.bot:
+        return
+
+    message = await bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
+
+    reactions_counts = 0
+    for reaction in message.reactions:
+        async for reacrion_user in reaction.users():
+            if user == reacrion_user:
+                reactions_counts += 1
+                if reactions_counts > 1:
+                    await reaction.remove(user)
 
 
 @bot.event
