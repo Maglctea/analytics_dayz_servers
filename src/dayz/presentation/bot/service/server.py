@@ -8,7 +8,7 @@ from discord import Embed, NotFound
 from discord.ext.commands import Bot
 
 from dayz.application.interfaces.server import IServerGateway
-from dayz.domain.dto.server import ServerBannerInfoDTO, ServerEmbedDTO
+from dayz.domain.dto.server import ServerBannerInfoDTO, ServerEmbedDTO, CreateServerDTO
 from dayz.infrastructure.parser import parse_page, get_pages
 from dayz.presentation.bot.utils.bot import build_embed, get_message_by_message_id, get_rating, get_messages, is_enough_reactions, get_reactions_count, \
     bulid_top_embed
@@ -28,7 +28,7 @@ async def parse_page_service(
 
 
 async def get_embed(server_info: ServerEmbedDTO) -> Embed:
-    server_data = server_info.data
+    server_data: CreateServerDTO = server_info.data
     banner_info = await parse_page_service(
         address=server_data.address,
         query_port=server_data.query_port
@@ -52,13 +52,11 @@ async def update_embeds_service(
 
     for server in servers:
         try:
-            server = server
-            try:
-                message = await get_message_by_message_id(bot, channel_id, server.message_id)
-            except NotFound as e:
-                logger.exception(f'Message for {server.name} not found')
-                continue
-
+            message = await get_message_by_message_id(bot, channel_id, server.message_id)
+        except NotFound as e:
+            logger.exception(f'Message for {server.name} not found')
+            continue
+        try:
             pages = await get_pages([f'{server.address}:{server.query_port}'])
             embed = await build_embed(
                 server_info=server,
@@ -112,8 +110,8 @@ async def update_top(
         server_link = 'https://discord.com/channels/416292549884641282'
         button_view = (
             discord.ui.View()
-            .add_item(discord.ui.Button(emoji='🔗', label='Карточка сервера', url=f'{server_link}/{server_data.forum_id}'))
-            .add_item(discord.ui.Button(emoji='🔗', label='Отзывы сервера', url=f'{server_link}/1163130507098333184/{server_data.message_id}'))
+            .add_item(discord.ui.Button(emoji='🔗', label='Карточка сервера', url=f'{server_link}/1163130507098333184/{server_data.message_id}'))
+            .add_item(discord.ui.Button(emoji='🔗', label='Отзывы сервера', url=f'{server_link}/{server_data.forum_id}'))
         )
         await channel.send(embed=embed, view=button_view)
     try:
