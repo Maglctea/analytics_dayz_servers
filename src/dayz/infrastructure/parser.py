@@ -30,8 +30,8 @@ async def _get_page(session: aiohttp.ClientSession, url: str) -> Optional[str]:
 
 async def get_pages(addresses: List[str]) -> List[str]:
     async with aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(ssl=False),
-            timeout=ClientTimeout(total=5),
+            connector=aiohttp.TCPConnector(ssl=False, limit=3),
+            timeout=ClientTimeout(total=30),
             trust_env=True
     ) as session:
         async with asyncio.TaskGroup() as tg:
