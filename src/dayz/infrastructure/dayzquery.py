@@ -5,12 +5,12 @@ import a2s.byteio
 from a2s.datacls import DataclsMeta
 from a2s.defaults import DEFAULT_TIMEOUT, DEFAULT_ENCODING
 
-
 """
 Names are based around the documentation at
 https://community.bistudio.com/wiki/Arma_3:_ServerBrowserProtocol3
 I do not understand their meaning at the time of writing as I have never played DayZ.
 """
+
 
 class DayzMod(metaclass=DataclsMeta):
     """Some hash value for identification probably"""
@@ -24,6 +24,7 @@ class DayzMod(metaclass=DataclsMeta):
 
     """Mod name"""
     name: str
+
 
 class DayzRules(metaclass=DataclsMeta):
     unknown_0: int
@@ -61,10 +62,10 @@ class DayzRules(metaclass=DataclsMeta):
     time_left: int
 
 
-
 def dayz_rules(address, timeout=DEFAULT_TIMEOUT, encoding=DEFAULT_ENCODING):
     rules_resp = a2s.rules(address, timeout, encoding)
     return dayz_rules_decode(rules_resp, encoding)
+
 
 async def dayz_arules(address, timeout=DEFAULT_TIMEOUT, encoding=DEFAULT_ENCODING):
     rules_resp = await a2s.arules(address, timeout, encoding)

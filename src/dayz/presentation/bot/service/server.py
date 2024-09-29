@@ -26,6 +26,10 @@ async def get_server_info(address: str, query_port: int) -> ServerBannerInfoDTO 
     try:
         info: SourceInfo = await a2s.ainfo(server, timeout=DEFAULT_TIMEOUT, encoding=DEFAULT_ENCODING)
     except asyncio.TimeoutError:
+        logger.warning(f'Server {address}:{query_port} is not responding for a long time')
+        return None
+    except ConnectionRefusedError:
+        logger.warning(f'Server {address}:{query_port} refused to connect')
         return None
 
     server_info = ServerBannerInfoDTO(
