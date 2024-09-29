@@ -1,15 +1,18 @@
+import asyncio
 import logging
 import sys
 import traceback
 from datetime import datetime
 
+import a2s
 import discord
+from a2s import SourceInfo
+from a2s.defaults import DEFAULT_TIMEOUT, DEFAULT_ENCODING
 from discord import Embed, NotFound
 from discord.ext.commands import Bot
 
 from dayz.application.interfaces.server import IServerGateway
 from dayz.domain.dto.server import ServerBannerInfoDTO, ServerEmbedDTO, CreateServerDTO
-from dayz.infrastructure.parser import parse_page, get_pages
 from dayz.presentation.bot.utils.bot import build_embed, get_message_by_message_id, get_rating, get_messages, is_enough_reactions, get_reactions_count, \
     bulid_top_embed
 
@@ -18,18 +21,27 @@ logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
 
-async def parse_page_service(
-        address: str,
-        query_port: int | str
-) -> ServerBannerInfoDTO:
-    pages = await get_pages([f'{address}:{query_port}'])
-    server_banner_info = parse_page(pages[0])
-    return server_banner_info
+async def get_server_info(address: str, query_port: int) -> ServerBannerInfoDTO | None:
+    server = (address, query_port)
+    try:
+        info: SourceInfo = await a2s.ainfo(server, timeout=DEFAULT_TIMEOUT, encoding=DEFAULT_ENCODING)
+    except asyncio.TimeoutError:
+        return None
+
+    server_info = ServerBannerInfoDTO(
+        status='online',
+        players=info.player_count,
+        max_players=info.max_players,
+        version=info.version,
+        map=info.map_name
+    )
+
+    return server_info
 
 
 async def get_embed(server_info: ServerEmbedDTO) -> Embed:
     server_data: CreateServerDTO = server_info.data
-    banner_info = await parse_page_service(
+    banner_info = await get_server_info(
         address=server_data.address,
         query_port=server_data.query_port
     )
@@ -57,10 +69,9 @@ async def update_embeds_service(
             logger.exception(f'Message for {server.name} not found')
             continue
         try:
-            pages = await get_pages([f'{server.address}:{server.query_port}'])
             embed = await build_embed(
                 server_info=server,
-                server_banner_info=parse_page(pages[0]) if pages else None,
+                server_banner_info=await get_server_info(server.address, server.query_port),
                 rating=round(get_rating(message), 1),
                 bot_icon=bot.user.display_avatar.url,
             )
@@ -99,10 +110,9 @@ async def update_top(
     embeds = []
     for message in sorted_message_list[:placing_count]:
         server_data = await server_gateway.get_server(message_id=message.id)
-        pages = await get_pages([f'{server_data.address}:{server_data.query_port}'])
         embed = await bulid_top_embed(
             server_info=server_data,
-            server_banner_info=parse_page(pages[0]) if pages else None,
+            server_banner_info=await get_server_info(server_data.address, server_data.query_port),
             rating=round(get_rating(message), 1),
             bot_icon=bot.user.display_avatar.url,
         )

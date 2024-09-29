@@ -1,8 +1,8 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass
-class ServerDTO:
+class BaseServerDTO:
     id: int
     name: str
     address: str
@@ -13,23 +13,17 @@ class ServerDTO:
     description: str
     invite_code: str
     banner_url: str
+
+
+@dataclass
+class ServerDTO(BaseServerDTO):
     message_id: int
     forum_id: int
 
 
 @dataclass
-class CreateServerDTO:
-    id: int
-    name: str
-    address: str
-    port: int
-    query_port: int
-    mode: str
-    registration_type: str
-    description: str
-    invite_code: str
-    banner_url: str
-
+class CreateServerDTO(BaseServerDTO):
+    ...
 
 
 @dataclass

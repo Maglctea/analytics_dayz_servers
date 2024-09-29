@@ -7,7 +7,7 @@ import discord
 from discord import Message, User
 from discord.ext.commands import Bot
 
-from dayz.domain.dto.server import ServerBannerInfoDTO, ServerDTO
+from dayz.domain.dto.server import ServerBannerInfoDTO, ServerDTO, BaseServerDTO
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ def get_color_by_rating(rating: float) -> int:
 
 
 async def build_embed(
-        server_info: ServerDTO = None,
+        server_info: BaseServerDTO = None,
         server_banner_info: ServerBannerInfoDTO = None,
         rating: float = None,
         bot_icon: str = None,
