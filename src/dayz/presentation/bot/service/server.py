@@ -11,7 +11,7 @@ from a2s.defaults import DEFAULT_TIMEOUT, DEFAULT_ENCODING
 from discord import Embed, NotFound
 from discord.ext.commands import Bot
 
-from dayz.application.interfaces.server import IServerGateway
+from dayz.application.interfaces.server import IPVPServerGateway
 from dayz.domain.dto.server import ServerBannerInfoDTO, ServerEmbedDTO, CreateServerDTO
 from dayz.presentation.bot.utils.bot import build_embed, get_message_by_message_id, get_rating, get_messages, is_enough_reactions, get_reactions_count, \
     bulid_top_embed
@@ -62,7 +62,7 @@ async def get_embed(server_info: ServerEmbedDTO) -> Embed:
 async def update_embeds_service(
         bot: Bot,
         channel_id: int,
-        server_gateway: IServerGateway
+        server_gateway: IPVPServerGateway
 ) -> None:
     servers = await server_gateway.get_servers()
 
@@ -92,7 +92,7 @@ async def update_top(
         top_channel_id: int,
         required_reaction_count: int,
         placing_count: int,
-        server_gateway: IServerGateway
+        server_gateway: IPVPServerGateway
 ) -> None:
     filter_message_list = [
         message

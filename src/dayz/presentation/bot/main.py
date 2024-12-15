@@ -12,7 +12,7 @@ from dishka.integrations.faststream import inject, setup_dishka
 from faststream import FastStream
 from faststream.rabbit import RabbitBroker
 
-from dayz.application.interfaces.server import IServerGateway
+from dayz.application.interfaces.server import IPVPServerGateway, IPVEServerGateway
 from dayz.application.interfaces.uow import IUoW
 from dayz.domain.dto.configs.bot import BotConfig
 from dayz.domain.dto.configs.db import DBConfig
@@ -48,7 +48,8 @@ bot_config = load_config(
 )
 
 
-async def add_server_process(server: CreateServerDTO, channel_embeds_id: int, forum_feedback_id: int):
+async def add_server_process(server_gateway: IPVPServerGateway | IPVEServerGateway, uow: IUoW, server: CreateServerDTO, channel_embeds_id: int,
+                             forum_feedback_id: int):
     server_data = ServerEmbedDTO(
         avatar_url=bot.user.avatar.url,
         data=server
@@ -80,24 +81,27 @@ async def add_server_process(server: CreateServerDTO, channel_embeds_id: int, fo
     view_server_card = discord.ui.View().add_item(discord.ui.Button(emoji='🔗', label='Отзывы сервера', url=server_feedback_channel.message.jump_url))
     await server_card.edit(embeds=server_card.embeds, view=view_server_card)
 
-    async with container() as request_container:
-        server_gateway: IServerGateway = await request_container.get(IServerGateway)
-        uow: IUoW = await request_container.get(IUoW)
-        await server_gateway.set_message_id(server.id, server_card.id)
-        await server_gateway.set_forum_id(server.id, server_feedback_channel.thread.id)
-        await uow.commit()
+    await server_gateway.set_message_id(server.id, server_card.id)
+    await server_gateway.set_forum_id(server.id, server_feedback_channel.thread.id)
+    await uow.commit()
 
 
 @broker.subscriber("add_pvp_server")
 @inject
 async def add_pvp_server_handle(server: CreateServerDTO, config: FromDishka[BotConfig]):
-    await add_server_process(server, config.pvp_channel_embeds_id, config.pvp_forum_feedback_id)
+    async with container() as request_container:
+        pvp_server_gateway: IPVPServerGateway = await request_container.get(IPVPServerGateway)
+        uow: IUoW = await request_container.get(IUoW)
+        await add_server_process(pvp_server_gateway, uow, server, config.pvp_channel_embeds_id, config.pvp_forum_feedback_id)
 
 
 @broker.subscriber("add_pve_server")
 @inject
 async def add_pve_server_handle(server: CreateServerDTO, config: FromDishka[BotConfig]):
-    await add_server_process(server, config.pve_channel_embeds_id, config.pve_forum_feedback_id)
+    async with container() as request_container:
+        pve_server_gateway: IPVEServerGateway = await request_container.get(IPVEServerGateway)
+        uow: IUoW = await request_container.get(IUoW)
+        await add_server_process(pve_server_gateway, uow, server, config.pve_channel_embeds_id, config.pve_forum_feedback_id)
 
 
 async def delete_server_process(server: ServerDTO, channel_embeds_id, forum_feedback_id):
@@ -184,16 +188,17 @@ async def update_server_banners():
     logger.info('Start embeds update')
 
     async with container() as request_container:
-        server_gateway: IServerGateway = await request_container.get(IServerGateway)
+        pvp_server_gateway: IPVPServerGateway = await request_container.get(IPVPServerGateway)
+        pve_server_gateway: IPVEServerGateway = await request_container.get(IPVEServerGateway)
         await update_embeds_service(
             bot=bot,
             channel_id=bot_config.pvp_channel_embeds_id,
-            server_gateway=server_gateway
+            server_gateway=pvp_server_gateway
         )
         await update_embeds_service(
             bot=bot,
             channel_id=bot_config.pve_channel_embeds_id,
-            server_gateway=server_gateway
+            server_gateway=pve_server_gateway
         )
 
 
@@ -204,10 +209,11 @@ async def update_server_top():
         return
 
     async with container() as request_container:
-        server_gateway: IServerGateway = await request_container.get(IServerGateway)
+        pvp_server_gateway: IPVPServerGateway = await request_container.get(IPVPServerGateway)
+        pve_server_gateway: IPVPServerGateway = await request_container.get(IPVEServerGateway)
         logger.info('Start update server top')
         await update_top(
-            server_gateway=server_gateway,
+            server_gateway=pvp_server_gateway,
             bot=bot,
             embed_channel_id=bot_config.pvp_channel_embeds_id,
             top_channel_id=bot_config.pvp_channel_top_id,
@@ -215,7 +221,7 @@ async def update_server_top():
             placing_count=bot_config.placing_top_count
         )
         await update_top(
-            server_gateway=server_gateway,
+            server_gateway=pve_server_gateway,
             bot=bot,
             embed_channel_id=bot_config.pve_channel_embeds_id,
             top_channel_id=bot_config.pve_channel_top_id,
@@ -236,7 +242,8 @@ async def update(interaction: Interaction):
         color=discord.Color.blue()
     )
     async with container() as request_container:
-        server_gateway: IServerGateway = await request_container.get(IServerGateway)
+        pvp_server_gateway: IPVPServerGateway = await request_container.get(IPVPServerGateway)
+        pve_server_gateway: IPVPServerGateway = await request_container.get(IPVEServerGateway)
 
         await response.send_message(  # type: ignore
             embed=embed,
@@ -246,13 +253,13 @@ async def update(interaction: Interaction):
         await update_embeds_service(
             bot=bot,
             channel_id=bot_config.pvp_channel_embeds_id,
-            server_gateway=server_gateway
+            server_gateway=pvp_server_gateway
         )
 
         await update_embeds_service(
             bot=bot,
             channel_id=bot_config.pve_channel_embeds_id,
-            server_gateway=server_gateway
+            server_gateway=pve_server_gateway
         )
 
 

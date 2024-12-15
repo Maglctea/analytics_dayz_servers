@@ -3,7 +3,7 @@ from sqlalchemy import or_
 from sqlalchemy import select, delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dayz.application.interfaces.server import IServerGateway, IPVEServerGateway
+from dayz.application.interfaces.server import IPVPServerGateway, IPVEServerGateway
 from dayz.domain.dto.server import ServerDTO
 from dayz.infrastructure.db.converter import model_to_server_converter
 from dayz.infrastructure.db.models import PVPServer, PVEServer
@@ -11,7 +11,7 @@ from dayz.infrastructure.db.models import PVPServer, PVEServer
 retort = Retort()
 
 
-class PVPServerGateway(IServerGateway):
+class PVPServerGateway(IPVPServerGateway):
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 

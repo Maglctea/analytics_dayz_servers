@@ -1,4 +1,4 @@
-from dayz.application.interfaces.server import IServerGateway
+from dayz.application.interfaces.server import IPVPServerGateway
 from dayz.application.interfaces.uow import IUoW
 from dayz.domain.dto.server import ServerDTO, CreateServerDTO
 
@@ -7,7 +7,7 @@ class CreateServerInteractor:
     def __init__(
             self,
             unit_of_work: IUoW,
-            server_gateway: IServerGateway,
+            server_gateway: IPVPServerGateway,
     ) -> None:
         self.unit_of_work = unit_of_work
         self.server_gateway = server_gateway
