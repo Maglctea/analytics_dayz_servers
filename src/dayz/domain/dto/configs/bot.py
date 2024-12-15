@@ -3,9 +3,12 @@ from dataclasses import dataclass
 
 @dataclass
 class BotConfig:
-    channel_embeds_id: int
-    channel_top_id: int
-    forum_feedback_id: int
+    pvp_channel_embeds_id: int
+    pve_channel_embeds_id: int
+    pvp_channel_top_id: int
+    pve_channel_top_id: int
+    pvp_forum_feedback_id: int
+    pve_forum_feedback_id: int
     guild_id: int
     guildmaster_id: int
     task_update_minute: int

@@ -7,11 +7,12 @@ from datetime import datetime
 import discord
 from discord import Interaction, User, ButtonStyle, Member, RawReactionActionEvent
 from discord.ext import commands, tasks
-from dishka import make_async_container, AsyncContainer
+from dishka import make_async_container, AsyncContainer, FromDishka
+from dishka.integrations.faststream import inject, setup_dishka
 from faststream import FastStream
 from faststream.rabbit import RabbitBroker
 
-from dayz.application.interfaces.server import IServerGateway
+from dayz.application.interfaces.server import IPVPServerGateway
 from dayz.application.interfaces.uow import IUoW
 from dayz.domain.dto.configs.bot import BotConfig
 from dayz.domain.dto.configs.db import DBConfig
@@ -47,15 +48,14 @@ bot_config = load_config(
 )
 
 
-@broker.subscriber("add_server")  # handle messages by routing key
-async def add_server_handle(server: CreateServerDTO):
+async def add_server_process(server: CreateServerDTO, channel_embeds_id: int, forum_feedback_id: int):
     server_data = ServerEmbedDTO(
         avatar_url=bot.user.avatar.url,
         data=server
     )
 
     embed = await get_embed(server_data)
-    channel = bot.get_channel(bot_config.channel_embeds_id)
+    channel = bot.get_channel(channel_embeds_id)
 
     server_card = await channel.send(embed=embed)
 
@@ -63,7 +63,7 @@ async def add_server_handle(server: CreateServerDTO):
         emoji = f'{i}\u20e3'  # Получаем соответствующий эмодзи
         await server_card.add_reaction(emoji)
 
-    forum: discord.ForumChannel = bot.get_channel(bot_config.forum_feedback_id)
+    forum: discord.ForumChannel = bot.get_channel(forum_feedback_id)
 
     embed = discord.Embed(
         title=server.name,
@@ -81,19 +81,42 @@ async def add_server_handle(server: CreateServerDTO):
     await server_card.edit(embeds=server_card.embeds, view=view_server_card)
 
     async with container() as request_container:
-        server_gateway: IServerGateway = await request_container.get(IServerGateway)
+        server_gateway: IPVPServerGateway = await request_container.get(IPVPServerGateway)
         uow: IUoW = await request_container.get(IUoW)
         await server_gateway.set_message_id(server.id, server_card.id)
         await server_gateway.set_forum_id(server.id, server_feedback_channel.thread.id)
         await uow.commit()
 
 
-@broker.subscriber("delete_server")  # handle messages by routing key
-async def delete_server_handle(server: ServerDTO) -> None:
-    message = await get_message_by_message_id(bot, bot_config.channel_embeds_id, server.message_id)
-    feedback_channel = get_forum_channel_by_name(bot, bot_config.forum_feedback_id, server.name)
+@broker.subscriber("add_pvp_server")
+@inject
+async def add_pvp_server_handle(server: CreateServerDTO, config: FromDishka[BotConfig]):
+    await add_server_process(server, config.pvp_channel_embeds_id, config.pvp_forum_feedback_id)
+
+
+@broker.subscriber("add_pve_server")
+@inject
+async def add_pve_server_handle(server: CreateServerDTO, config: FromDishka[BotConfig]):
+    await add_server_process(server, config.pve_channel_embeds_id, config.pve_forum_feedback_id)
+
+
+async def delete_server_process(server: ServerDTO, channel_embeds_id, forum_feedback_id):
+    message = await get_message_by_message_id(bot, channel_embeds_id, server.message_id)
+    feedback_channel = get_forum_channel_by_name(bot, forum_feedback_id, server.name)
     await message.delete()
     await feedback_channel.delete()
+
+
+@broker.subscriber("delete_pvp_server")
+@inject
+async def delete_pvp_server_handle(server: ServerDTO, config: FromDishka[BotConfig]) -> None:
+    await delete_server_process(server, config.pvp_channel_embeds_id, config.pvp_forum_feedback_id)
+
+
+@broker.subscriber("delete_pve_server")
+@inject
+async def delete_pve_server_handle(server: ServerDTO, config: FromDishka[BotConfig]) -> None:
+    await delete_server_process(server, config.pve_channel_embeds_id, config.pve_forum_feedback_id)
 
 
 @bot.event
@@ -108,15 +131,15 @@ async def on_ready():
 async def on_raw_reaction_add(payload: RawReactionActionEvent):
     user = payload.member
 
-    if payload.channel_id != bot_config.channel_embeds_id or user.bot:
+    if payload.channel_id != bot_config.pvp_channel_embeds_id or user.bot:
         return
 
     message = await bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
 
     reactions_counts = 0
     for reaction in message.reactions:
-        async for reacrion_user in reaction.users():
-            if user == reacrion_user:
+        async for reaction_user in reaction.users():
+            if user == reaction_user:
                 reactions_counts += 1
                 if reactions_counts > 1:
                     await reaction.remove(user)
@@ -161,10 +184,15 @@ async def update_server_banners():
     logger.info('Start embeds update')
 
     async with container() as request_container:
-        server_gateway: IServerGateway = await request_container.get(IServerGateway)
+        server_gateway: IPVPServerGateway = await request_container.get(IPVPServerGateway)
         await update_embeds_service(
             bot=bot,
-            channel_id=bot_config.channel_embeds_id,
+            channel_id=bot_config.pvp_channel_embeds_id,
+            server_gateway=server_gateway
+        )
+        await update_embeds_service(
+            bot=bot,
+            channel_id=bot_config.pve_channel_embeds_id,
             server_gateway=server_gateway
         )
 
@@ -176,13 +204,21 @@ async def update_server_top():
         return
 
     async with container() as request_container:
-        server_gateway: IServerGateway = await request_container.get(IServerGateway)
+        server_gateway: IPVPServerGateway = await request_container.get(IPVPServerGateway)
         logger.info('Start update server top')
         await update_top(
             server_gateway=server_gateway,
             bot=bot,
-            embed_channel_id=bot_config.channel_embeds_id,
-            top_channel_id=bot_config.channel_top_id,
+            embed_channel_id=bot_config.pvp_channel_embeds_id,
+            top_channel_id=bot_config.pvp_channel_top_id,
+            required_reaction_count=bot_config.required_reaction_count,
+            placing_count=bot_config.placing_top_count
+        )
+        await update_top(
+            server_gateway=server_gateway,
+            bot=bot,
+            embed_channel_id=bot_config.pve_channel_embeds_id,
+            top_channel_id=bot_config.pve_channel_top_id,
             required_reaction_count=bot_config.required_reaction_count,
             placing_count=bot_config.placing_top_count
         )
@@ -200,7 +236,7 @@ async def update(interaction: Interaction):
         color=discord.Color.blue()
     )
     async with container() as request_container:
-        server_gateway: IServerGateway = await request_container.get(IServerGateway)
+        server_gateway: IPVPServerGateway = await request_container.get(IPVPServerGateway)
 
         await response.send_message(  # type: ignore
             embed=embed,
@@ -209,7 +245,13 @@ async def update(interaction: Interaction):
 
         await update_embeds_service(
             bot=bot,
-            channel_id=bot_config.channel_embeds_id,
+            channel_id=bot_config.pvp_channel_embeds_id,
+            server_gateway=server_gateway
+        )
+
+        await update_embeds_service(
+            bot=bot,
+            channel_id=bot_config.pve_channel_embeds_id,
             server_gateway=server_gateway
         )
 
@@ -256,7 +298,7 @@ async def clear_reactions(
 
     logs_embed = await clear_user_reactions(
         bot=bot,
-        id_channel=bot_config.channel_embeds_id,
+        id_channel=bot_config.pvp_channel_embeds_id,
         user=user
     )
     try:
@@ -280,6 +322,7 @@ async def main() -> None:
         DbProvider(config=db_config),
         GatewaysProvider(),
     )
+    setup_dishka(container, app)
 
     logger.info("Initializing bot")
     console_handler = logging.StreamHandler()

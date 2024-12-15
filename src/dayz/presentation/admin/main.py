@@ -16,13 +16,14 @@ from dayz.domain.dto.configs.api import APIConfig
 from dayz.domain.dto.configs.auth import AuthConfig
 from dayz.domain.dto.configs.db import DBConfig
 from dayz.infrastructure.config_loader import load_config
-from dayz.infrastructure.db.models.server import Server
+from dayz.infrastructure.db.models.server import PVPServer, PVEServer
 from dayz.infrastructure.di.config import AuthConfigProvider, AdminConfigProvider
 from dayz.infrastructure.di.db import DbProvider
 from dayz.infrastructure.di.gateway import GatewaysProvider
 from dayz.infrastructure.di.interactor import AdminInteractorProvider
 from dayz.presentation.admin.auth import AdminAuthProvider
-from dayz.presentation.admin.views.servers import ServerAdminView
+from dayz.presentation.admin.views.pve_servers import PVEServerAdminView
+from dayz.presentation.admin.views.pvp_servers import PVPServerAdminView
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +34,19 @@ def setup_admin_views(admin: Admin) -> None:
 
     # Servers
     admin.add_view(
-        ServerAdminView(
-            label='Сервера',
-            identity='server',
-            model=Server,
+        PVPServerAdminView(
+            label='PVP Сервера',
+            identity='pvp_server',
+            model=PVPServer,
+            icon="fa-solid fa-server",
+        ),
+    )
+
+    admin.add_view(
+        PVEServerAdminView(
+            label='PVE Сервера',
+            identity='pve_server',
+            model=PVEServer,
             icon="fa-solid fa-server",
         ),
     )

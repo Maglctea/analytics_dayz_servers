@@ -6,16 +6,16 @@ from starlette_admin import fields
 from starlette_admin.contrib.sqla import ModelView
 
 from dayz.infrastructure.db.converter import model_to_server_converter
-from dayz.infrastructure.db.models.server import Server
+from dayz.infrastructure.db.models.server import PVPServer
 
 
-class ServerAdminView(ModelView):
-    name = "Server"
-    identity = 'server'
+class PVPServerAdminView(ModelView):
+    name = "PVP Server"
+    identity = 'pvp_server'
     label = 'Аккаунт'
 
     fields = [
-        Server.id,
+        PVPServer.id,
         # Server.name,
         fields.StringField('name', 'Название', required=True),
         fields.StringField('address', 'IP адрес', required=True),
@@ -31,50 +31,50 @@ class ServerAdminView(ModelView):
     ]
 
     exclude_fields_from_list = [
-        Server.address,
-        Server.port,
-        Server.query_port,
-        Server.mode,
-        Server.registration_type,
-        Server.description,
-        Server.invite_code,
-        Server.banner_url,
-        Server.message_id,
-        Server.forum_id
+        PVPServer.address,
+        PVPServer.port,
+        PVPServer.query_port,
+        PVPServer.mode,
+        PVPServer.registration_type,
+        PVPServer.description,
+        PVPServer.invite_code,
+        PVPServer.banner_url,
+        PVPServer.message_id,
+        PVPServer.forum_id
     ]
 
     sortable_fields = [
-        Server.id,
-        Server.name,
-        Server.registration_type,
+        PVPServer.id,
+        PVPServer.name,
+        PVPServer.registration_type,
     ]
 
     exclude_fields_from_create = [
-        Server.message_id,
-        Server.forum_id
+        PVPServer.message_id,
+        PVPServer.forum_id
     ]
 
     searchable_fields = [
-        Server.id,
-        Server.name,
-        Server.address,
-        Server.registration_type,
+        PVPServer.id,
+        PVPServer.name,
+        PVPServer.address,
+        PVPServer.registration_type,
     ]
     page_size = 50
 
     async def can_edit(self, request: Request) -> bool:
         return False
 
-    async def after_create(self, request: Request, obj: Server) -> None:
+    async def after_create(self, request: Request, obj: PVPServer) -> None:
         async with RabbitBroker(os.getenv('RABBITMQ_HOST')) as broker:
             await broker.publish(
                 model_to_server_converter(obj),
-                queue='add_server'
+                queue='add_pvp_server'
             )
 
-    async def after_delete(self, request: Request, obj: Server) -> None:
+    async def after_delete(self, request: Request, obj: PVPServer) -> None:
         async with RabbitBroker(os.getenv('RABBITMQ_HOST')) as broker:
             await broker.publish(
                 model_to_server_converter(obj),
-                queue='delete_server'
+                queue='delete_pvp_server'
             )

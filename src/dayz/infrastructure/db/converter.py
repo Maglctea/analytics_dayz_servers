@@ -3,10 +3,10 @@ from adaptix._internal.conversion.facade.provider import allow_unlinked_optional
 
 from dayz.application.scheme.server import CreateServerScheme
 from dayz.domain.dto.server import ServerDTO, CreateServerDTO, CreateServerDTO
-from dayz.infrastructure.db.models import Server
+from dayz.infrastructure.db.models import PVPServer
 
-convert_server_to_dto = get_converter(Server, ServerDTO)
-convert_dto_to_server = get_converter(ServerDTO, Server)
+convert_server_to_dto = get_converter(PVPServer, ServerDTO)
+convert_dto_to_server = get_converter(ServerDTO, PVPServer)
 
 # convert_create_dto_to_server = get_converter(
 #     CreateServerDTO,
@@ -51,7 +51,7 @@ convert_dto_to_server = get_converter(ServerDTO, Server)
 #     forum_id=12323
 # )
 model_to_server_converter = get_converter(
-    Server,
+    PVPServer,
     ServerDTO
 )
 
