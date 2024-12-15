@@ -12,7 +12,7 @@ from dishka.integrations.faststream import inject, setup_dishka
 from faststream import FastStream
 from faststream.rabbit import RabbitBroker
 
-from dayz.application.interfaces.server import IPVPServerGateway
+from dayz.application.interfaces.server import IServerGateway
 from dayz.application.interfaces.uow import IUoW
 from dayz.domain.dto.configs.bot import BotConfig
 from dayz.domain.dto.configs.db import DBConfig
@@ -81,7 +81,7 @@ async def add_server_process(server: CreateServerDTO, channel_embeds_id: int, fo
     await server_card.edit(embeds=server_card.embeds, view=view_server_card)
 
     async with container() as request_container:
-        server_gateway: IPVPServerGateway = await request_container.get(IPVPServerGateway)
+        server_gateway: IServerGateway = await request_container.get(IServerGateway)
         uow: IUoW = await request_container.get(IUoW)
         await server_gateway.set_message_id(server.id, server_card.id)
         await server_gateway.set_forum_id(server.id, server_feedback_channel.thread.id)
@@ -184,7 +184,7 @@ async def update_server_banners():
     logger.info('Start embeds update')
 
     async with container() as request_container:
-        server_gateway: IPVPServerGateway = await request_container.get(IPVPServerGateway)
+        server_gateway: IServerGateway = await request_container.get(IServerGateway)
         await update_embeds_service(
             bot=bot,
             channel_id=bot_config.pvp_channel_embeds_id,
@@ -204,7 +204,7 @@ async def update_server_top():
         return
 
     async with container() as request_container:
-        server_gateway: IPVPServerGateway = await request_container.get(IPVPServerGateway)
+        server_gateway: IServerGateway = await request_container.get(IServerGateway)
         logger.info('Start update server top')
         await update_top(
             server_gateway=server_gateway,
@@ -236,7 +236,7 @@ async def update(interaction: Interaction):
         color=discord.Color.blue()
     )
     async with container() as request_container:
-        server_gateway: IPVPServerGateway = await request_container.get(IPVPServerGateway)
+        server_gateway: IServerGateway = await request_container.get(IServerGateway)
 
         await response.send_message(  # type: ignore
             embed=embed,

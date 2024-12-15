@@ -3,7 +3,7 @@ from typing import Protocol
 from dayz.domain.dto.server import ServerDTO, CreateServerDTO
 
 
-class IPVPServerGateway(Protocol):
+class IServerGateway(Protocol):
     def add_server(self, server: CreateServerDTO) -> ServerDTO:
         raise NotImplementedError
 
