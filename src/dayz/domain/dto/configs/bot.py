@@ -15,7 +15,8 @@ class BotConfig:
     top_update_hours: int
     number_day_update_top: int
     placing_top_count: int
-    required_reaction_count: int
+    pvp_required_reaction_count: int
+    pve_required_reaction_count: int
     bot_token: str
     server_invite_code: str
     debug: bool

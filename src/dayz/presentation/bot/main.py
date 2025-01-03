@@ -217,7 +217,7 @@ async def update_server_top():
             bot=bot,
             embed_channel_id=bot_config.pvp_channel_embeds_id,
             top_channel_id=bot_config.pvp_channel_top_id,
-            required_reaction_count=bot_config.required_reaction_count,
+            required_reaction_count=bot_config.pvp_required_reaction_count,
             placing_count=bot_config.placing_top_count
         )
         await update_top(
@@ -225,7 +225,7 @@ async def update_server_top():
             bot=bot,
             embed_channel_id=bot_config.pve_channel_embeds_id,
             top_channel_id=bot_config.pve_channel_top_id,
-            required_reaction_count=bot_config.required_reaction_count,
+            required_reaction_count=bot_config.pve_required_reaction_count,
             placing_count=bot_config.placing_top_count
         )
 
