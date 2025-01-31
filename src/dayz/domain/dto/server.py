@@ -17,8 +17,8 @@ class BaseServerDTO:
 
 @dataclass
 class ServerDTO(BaseServerDTO):
-    message_id: int
-    forum_id: int
+    message_id: int | None = None
+    forum_id: int | None = None
 
 
 @dataclass
