@@ -24,8 +24,8 @@ class PVPServer(BaseModel):
     description: Mapped[str] = mapped_column(Text())
     invite_code: Mapped[str]
     banner_url: Mapped[str]
-    message_id: Mapped[int] = mapped_column(BIGINT(), nullable=True)
-    forum_id: Mapped[int] = mapped_column(BIGINT(), nullable=True)
+    message_id: Mapped[int | None] = mapped_column(BIGINT(), nullable=True)
+    forum_id: Mapped[int | None] = mapped_column(BIGINT(), nullable=True)
 
     def __str__(self):
         return self.name
