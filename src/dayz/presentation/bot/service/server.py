@@ -12,7 +12,7 @@ from discord import Embed, NotFound
 from discord.ext.commands import Bot
 
 from dayz.application.interfaces.server import IPVPServerGateway
-from dayz.domain.dto.server import ServerBannerInfoDTO, ServerEmbedDTO, CreateServerDTO
+from dayz.domain.dto.server import ServerBannerInfoDTO, ServerEmbedDTO, CreateServerDTO, ServerDTO
 from dayz.presentation.bot.utils.bot import build_embed, get_message_by_message_id, get_rating, get_messages, is_enough_reactions, get_reactions_count, \
     bulid_top_embed
 
@@ -92,7 +92,8 @@ async def update_top(
         top_channel_id: int,
         required_reaction_count: int,
         placing_count: int,
-        server_gateway: IPVPServerGateway
+        server_gateway: IPVPServerGateway,
+        type: str,
 ) -> None:
     filter_message_list = [
         message
@@ -113,7 +114,7 @@ async def update_top(
 
     embeds = []
     for message in sorted_message_list[:placing_count]:
-        server_data = await server_gateway.get_server(message_id=message.id)
+        server_data: ServerDTO = await server_gateway.get_server(message_id=message.id)
         embed = await bulid_top_embed(
             server_info=server_data,
             server_banner_info=await get_server_info(server_data.address, server_data.query_port),
@@ -122,9 +123,10 @@ async def update_top(
         )
 
         server_link = 'https://discord.com/channels/416292549884641282'
+        channel_id: int = 1163130507098333184 if type == 'pvp' else 1275532171213541516
         button_view = (
             discord.ui.View()
-            .add_item(discord.ui.Button(emoji='🔗', label='Карточка сервера', url=f'{server_link}/1163130507098333184/{server_data.message_id}'))
+            .add_item(discord.ui.Button(emoji='🔗', label='Карточка сервера', url=f'{server_link}/{channel_id}/{server_data.message_id}'))
             .add_item(discord.ui.Button(emoji='🔗', label='Отзывы сервера', url=f'{server_link}/{server_data.forum_id}'))
         )
         await channel.send(embed=embed, view=button_view)
