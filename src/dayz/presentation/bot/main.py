@@ -135,7 +135,7 @@ async def on_ready():
 async def on_raw_reaction_add(payload: RawReactionActionEvent):
     user = payload.member
 
-    if payload.channel_id != bot_config.pvp_channel_embeds_id or user.bot:
+    if payload.channel_id not in [bot_config.pvp_channel_embeds_id, bot_config.pve_channel_embeds_id] or user.bot:
         return
 
     message = await bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
