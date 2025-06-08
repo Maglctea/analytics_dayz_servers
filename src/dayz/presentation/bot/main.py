@@ -126,9 +126,9 @@ async def delete_pve_server_handle(server: ServerDTO, config: FromDishka[BotConf
 @bot.event
 async def on_ready():
     logger.info('Bot started')
-    await broker.start()
     update_server_banners.start()
     update_server_top.start()
+    await broker.start()
 
 
 @bot.event
