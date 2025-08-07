@@ -212,23 +212,25 @@ async def update_server_top():
         pvp_server_gateway: IPVPServerGateway = await request_container.get(IPVPServerGateway)
         pve_server_gateway: IPVPServerGateway = await request_container.get(IPVEServerGateway)
         logger.info('Start update server top')
-        await update_top(
-            server_gateway=pvp_server_gateway,
-            bot=bot,
-            embed_channel_id=bot_config.pvp_channel_embeds_id,
-            top_channel_id=bot_config.pvp_channel_top_id,
-            required_reaction_count=bot_config.pvp_required_reaction_count,
-            placing_count=bot_config.placing_top_count,
-            type='pvp',
-        )
-        await update_top(
-            server_gateway=pve_server_gateway,
-            bot=bot,
-            embed_channel_id=bot_config.pve_channel_embeds_id,
-            top_channel_id=bot_config.pve_channel_top_id,
-            required_reaction_count=bot_config.pve_required_reaction_count,
-            placing_count=bot_config.placing_top_count,
-            type='pve',
+        await asyncio.gather(
+            update_top(
+                server_gateway=pve_server_gateway,
+                bot=bot,
+                embed_channel_id=bot_config.pve_channel_embeds_id,
+                top_channel_id=bot_config.pve_channel_top_id,
+                required_reaction_count=bot_config.pve_required_reaction_count,
+                placing_count=bot_config.placing_top_count,
+                type='pve',
+            ),
+            update_top(
+                server_gateway=pvp_server_gateway,
+                bot=bot,
+                embed_channel_id=bot_config.pvp_channel_embeds_id,
+                top_channel_id=bot_config.pvp_channel_top_id,
+                required_reaction_count=bot_config.pvp_required_reaction_count,
+                placing_count=bot_config.placing_top_count,
+                type='pvp',
+            ),
         )
 
 
