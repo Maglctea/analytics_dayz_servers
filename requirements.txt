@@ -15,3 +15,4 @@ faststream==0.5.48
 dishka==1.6.0
 asyncpg==0.30.0
 python-a2s==1.4.1
+jose==1.0.0
