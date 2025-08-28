@@ -16,7 +16,7 @@ def create_engine(
 ) -> AsyncEngine:
     engine = create_async_engine(
         url=f'{full_url}?prepared_statement_cache_size=0',
-        echo=True,
+        echo=echo,
         echo_pool=echo,
         pool_size=10,
         connect_args={

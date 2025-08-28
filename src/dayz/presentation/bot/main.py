@@ -336,8 +336,6 @@ async def main() -> None:
     setup_dishka(container, app)
 
     logger.info("Initializing bot")
-    console_handler = logging.StreamHandler()
-    logger.addHandler(console_handler)
 
     await run_bot(bot_config)
     print("Bot")
