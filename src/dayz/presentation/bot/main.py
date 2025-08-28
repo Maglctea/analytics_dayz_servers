@@ -320,11 +320,11 @@ async def clear_reactions(
         logger.exception(f'Ошибка отправки сообщения для {interaction.user}: {str(e)}')
 
 
-async def run_bot(config: BotConfig):
-    await bot.start(config.bot_token)
+# async def run_bot(config: BotConfig):
+#     await bot.run(config.bot_token)
 
 
-async def main() -> None:
+def main() -> None:
     global container
 
     logger.info("Initializing DI")
@@ -337,9 +337,9 @@ async def main() -> None:
 
     logger.info("Initializing bot")
 
-    await run_bot(bot_config)
+    bot.run(bot_config.bot_token)
     print("Bot")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
