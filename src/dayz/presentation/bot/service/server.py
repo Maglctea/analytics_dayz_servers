@@ -6,6 +6,7 @@ from datetime import datetime
 
 import a2s
 import discord
+import pytz
 from a2s import SourceInfo
 from a2s.defaults import DEFAULT_TIMEOUT, DEFAULT_ENCODING
 from discord import Embed, NotFound
@@ -72,6 +73,7 @@ async def update_embeds_service(
         except NotFound as e:
             logger.exception(f'Message for {server.name} not found')
             continue
+        moscow_tz = pytz.timezone('Europe/Moscow')
         try:
             embed = await build_embed(
                 server_info=server,
@@ -81,9 +83,9 @@ async def update_embeds_service(
             )
 
             await message.edit(embed=embed)
-            logger.info(f'{datetime.now()}: {embed.title}: updated')
+            logger.info(f'{datetime.now(tz=moscow_tz)}: {embed.title}: updated')
         except Exception as e:
-            logger.exception(f'{datetime.now()}: {server.name}: {traceback.format_exc()}')
+            logger.exception(f'{datetime.now(tz=moscow_tz)}: {server.name}: {traceback.format_exc()}')
 
 
 async def update_top(

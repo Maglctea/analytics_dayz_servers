@@ -14,7 +14,7 @@ services:
       - .:/app
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-    restart: on-failure
+    restart: always
 
   db:
     image: postgres:latest

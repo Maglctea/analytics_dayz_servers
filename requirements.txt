@@ -16,3 +16,4 @@ dishka==1.6.0
 asyncpg==0.30.0
 python-a2s==1.4.1
 python-jose==3.3.0
+pytz==2025.2

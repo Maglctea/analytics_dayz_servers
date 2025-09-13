@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 from datetime import datetime
-
+import pytz
 import discord
 from discord import Interaction, User, ButtonStyle, Member, RawReactionActionEvent
 from discord.ext import commands, tasks
@@ -204,7 +204,8 @@ async def update_server_banners():
 
 @tasks.loop(hours=bot_config.top_update_hours)
 async def update_server_top():
-    date = datetime.now()
+    moscow_tz = pytz.timezone('Europe/Moscow')
+    date = datetime.now(tz=moscow_tz)
     if date.day != bot_config.number_day_update_top:
         return
 

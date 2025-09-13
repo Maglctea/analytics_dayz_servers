@@ -4,6 +4,7 @@ from typing import Optional, AsyncIterator
 
 import aiohttp
 import discord
+import pytz
 from discord import Message, User
 from discord.ext.commands import Bot
 
@@ -87,8 +88,8 @@ async def build_embed(
     embed.set_thumbnail(url=f'http://fb79092i.beget.tech/SDCScores/{float(rating)}')
 
     embed.set_image(url=server_info.banner_url)
-
-    now = datetime.now()
+    moscow_tz = pytz.timezone('Europe/Moscow')
+    now = datetime.now(tz=moscow_tz)
     formatted_date = now.strftime("%d.%m.%Y %H:%M:%S")
     embed.set_footer(
         icon_url=bot_icon,
@@ -142,7 +143,8 @@ async def bulid_top_embed(
 
     embed.set_image(url=server_info.banner_url)
 
-    now = datetime.now()
+    moscow_tz = pytz.timezone('Europe/Moscow')
+    now = datetime.now(tz=moscow_tz)
     formatted_date = now.strftime("%d.%m.%Y %H:%M:%S")
     embed.set_footer(
         icon_url=bot_icon,

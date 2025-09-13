@@ -2,6 +2,7 @@ import hashlib
 from datetime import timedelta, datetime
 from typing import Optional
 
+import pytz
 from jose import jwt
 
 
@@ -15,9 +16,10 @@ def generate_jwt_token(
         secret_key: str,
         expires_delta_minutes: int = 5
 ):
+    moscow_tz = pytz.timezone('Europe/Moscow')
     data = {
         'user_id': user_id,
-        'exp': datetime.now() + timedelta(minutes=expires_delta_minutes)
+        'exp': datetime.now(tz=moscow_tz) + timedelta(minutes=expires_delta_minutes)
     }
 
     encoded_jwt = jwt.encode(
