@@ -15,7 +15,7 @@ from discord.ext.commands import Bot
 from dayz.application.interfaces.server import IPVPServerGateway
 from dayz.domain.dto.server import ServerBannerInfoDTO, ServerEmbedDTO, CreateServerDTO, ServerDTO
 from dayz.presentation.bot.utils.bot import build_embed, get_message_by_message_id, get_rating, get_messages, is_enough_reactions, get_reactions_count, \
-    bulid_top_embed
+    bulid_top_embed, get_rating_icon_path
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -54,7 +54,7 @@ async def get_embed(server_info: ServerEmbedDTO) -> Embed:
     embed = await build_embed(
         server_info=server_data,
         server_banner_info=banner_info,
-        rating=0,
+        rating_icon_file=None,
         bot_icon=server_info.avatar_url
     )
     return embed
@@ -74,15 +74,20 @@ async def update_embeds_service(
             logger.exception(f'Message for {server.name} not found')
             continue
         moscow_tz = pytz.timezone('Europe/Moscow')
+
+        rating = round(get_rating(message), 1)
+        rating_icon_path: str = get_rating_icon_path(rating)
+        rating_icon_file = discord.File(rating_icon_path)
+
         try:
             embed = await build_embed(
                 server_info=server,
                 server_banner_info=await get_server_info(server.address, server.query_port),
-                rating=round(get_rating(message), 1),
+                rating_icon_file=rating_icon_file,
                 bot_icon=bot.user.display_avatar.url,
             )
 
-            await message.edit(embed=embed)
+            await message.edit(embed=embed, attachments=[rating_icon_file])
             logger.info(f'{datetime.now(tz=moscow_tz)}: {embed.title}: updated')
         except Exception as e:
             logger.exception(f'{datetime.now(tz=moscow_tz)}: {server.name}: {traceback.format_exc()}')

@@ -1,4 +1,5 @@
 import logging
+import os.path
 from datetime import datetime
 from typing import Optional, AsyncIterator
 
@@ -8,6 +9,7 @@ import pytz
 from discord import Message, User
 from discord.ext.commands import Bot
 
+from dayz import settings
 from dayz.domain.dto.server import ServerBannerInfoDTO, ServerDTO, BaseServerDTO
 
 logger = logging.getLogger(__name__)
@@ -23,6 +25,10 @@ async def get_server_icon(invite_code: str) -> Optional[str]:
             avatar_url = f"https://cdn.discordapp.com/icons/{server['id']}/{server['icon']}.png"
             return avatar_url
     return None
+
+
+def get_rating_icon_path(rating: float) -> str:
+    return os.path.join(settings.MEDIA_FOLDER, "rating", f"{rating}.png")
 
 
 def get_color_by_rating(rating: float) -> int:
@@ -43,7 +49,7 @@ def get_color_by_rating(rating: float) -> int:
 async def build_embed(
         server_info: BaseServerDTO = None,
         server_banner_info: ServerBannerInfoDTO = None,
-        rating: float = None,
+        rating_icon_file: discord.File = None,
         bot_icon: str = None,
 ) -> discord.Embed:
     embed = discord.Embed(
@@ -85,7 +91,7 @@ async def build_embed(
         inline=False
     )
 
-    embed.set_thumbnail(url=f'http://fb79092i.beget.tech/SDCScores/{float(rating)}')
+    embed.set_thumbnail(url=rating_icon_file.uri)
 
     embed.set_image(url=server_info.banner_url)
     moscow_tz = pytz.timezone('Europe/Moscow')
