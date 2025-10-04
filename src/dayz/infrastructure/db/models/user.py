@@ -27,5 +27,5 @@ class UserModel(BaseModel):
     def to_model(user: UserData) -> 'UserModel':
         return UserModel(
             username=user.username,
-            password=user.hashed_password
+            hashed_password=user.hashed_password
         )

@@ -91,7 +91,8 @@ async def build_embed(
         inline=False
     )
 
-    embed.set_thumbnail(url=rating_icon_file.uri)
+    if rating_icon_file:
+        embed.set_thumbnail(url=rating_icon_file.uri)
 
     embed.set_image(url=server_info.banner_url)
     moscow_tz = pytz.timezone('Europe/Moscow')

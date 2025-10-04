@@ -7,7 +7,7 @@ alembic==1.16.5
 psycopg2-binary==2.9.10
 pydantic~=2.12.0a1
 fastapi~=0.116.1
-starlette-admin[i18n]==0.16.0rc2
+starlette-admin[i18n]==0.16.0rc3
 adaptix==3.0.0b11
 itsdangerous==2.2.0
 aio_pika==9.5.7
