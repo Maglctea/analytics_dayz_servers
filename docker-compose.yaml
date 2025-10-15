@@ -25,7 +25,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgresql-data-test:/var/lib/postgresql/data
-    restart: on-failure
+    restart: always
     ports:
       - "5433:5432"
     healthcheck:
@@ -48,7 +48,7 @@ services:
       - .:/app
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-    restart: on-failure
+    restart: always
     ports:
       - "8100:8100"
 
