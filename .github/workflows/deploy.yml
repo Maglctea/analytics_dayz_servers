@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      -
+
 env:
   REMOTE_SERVER_HOST: ${{ vars.REMOTE_SERVER_HOST }}
   REMOTE_SERVER_USERNAME: ${{ vars.REMOTE_SERVER_USERNAME }}

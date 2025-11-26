@@ -1,48 +1,22 @@
-from dishka import Provider, Scope, provide
+from dishka import Provider, Scope, from_context
 
-from dayz.domain.dto.configs.admin import AdminConfig
-from dayz.domain.dto.configs.api import APIConfig
-from dayz.domain.dto.configs.auth import AuthConfig
-from dayz.domain.dto.configs.bot import BotConfig
-from dayz.infrastructure.config_loader import load_config
+from dayz.config import (
+    APIConfig,
+    AuthConfig, DBConfig,
+)
+from dayz.config import BrokerConfig
+from dayz.config.admin import AdminConfig
+from dayz.config.bot import BotConfig
+from dayz.config.storage import StorageConfig
 
 
-class BaseConfigProvider(Provider):
+class ConfigProvider(Provider):
     scope = Scope.APP
 
-
-class APIConfigProvider(BaseConfigProvider):
-
-    @provide
-    def get_api_config(self) -> APIConfig:
-        return load_config(
-            config_type=APIConfig,
-            config_scope='api',
-        )
-
-
-class AdminConfigProvider(BaseConfigProvider):
-    @provide
-    def get_api_config(self) -> AdminConfig:
-        return load_config(
-            config_type=AdminConfig,
-            config_scope='admin',
-        )
-
-
-class AuthConfigProvider(BaseConfigProvider):
-    @provide
-    def get_auth_config(self) -> AuthConfig:
-        return load_config(
-            config_type=AuthConfig,
-            config_scope='auth',
-        )
-
-
-class BotConfigProvider(BaseConfigProvider):
-    @provide
-    def get_auth_config(self) -> BotConfig:
-        return load_config(
-            config_type=BotConfig,
-            config_scope='bot',
-        )
+    admin_config = from_context(AdminConfig)
+    api_config = from_context(APIConfig)
+    auth_config = from_context(AuthConfig)
+    bot_config = from_context(BotConfig)
+    broker_config = from_context(BrokerConfig)
+    storage_config = from_context(StorageConfig)
+    db_config = from_context(DBConfig)
