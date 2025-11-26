@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 class DBConfig(BaseSettings):
     host: str = 'db'
     port: int = 5432
-    database: str = 'dayz'
+    name: str = 'dayz'
     user: str = 'postgres'
     password: str = 'password'
     echo: bool = False
@@ -13,7 +13,7 @@ class DBConfig(BaseSettings):
 
     @property
     def full_url(self) -> str:
-        return f"{self.db_type}+{self.driver}://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
+        return f"{self.db_type}+{self.driver}://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
 
     class Config:
         env_prefix = 'DB_'
