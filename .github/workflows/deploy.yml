@@ -21,13 +21,13 @@ jobs:
         uses: appleboy/ssh-action@master
         with:
           host: ${{ env.REMOTE_SERVER_HOST }}
-          username: ${{ env.REMOTE_FORTUHOST_USERNAME }}
-          password: ${{ secrets.SERVER_PASSWORD }}
+          username: ${{ env.REMOTE_SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
           script: |
             cd ${{ env.COMPOSE_PATH }}
             git pull
             docker-compose up --build -d
 
       - name: Rollback commit on error
-        if: steps.deployment.outcome != 'success'
-        run: git reset HEAD
+        if: failure()
+        run: echo "Deployment failed - check logs above"
