@@ -9,7 +9,7 @@ import pytz
 from discord import Message, User
 from discord.ext.commands import Bot
 
-from dayz import settings
+from dayz import config
 from dayz.domain.dto.server import ServerBannerInfoDTO, ServerDTO, BaseServerDTO
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ async def get_server_icon(invite_code: str) -> Optional[str]:
 
 
 def get_rating_icon_path(rating: float) -> str:
-    return os.path.join(settings.MEDIA_FOLDER, "rating", f"{rating}.png")
+    return os.path.join(config.storage_config.media_folder, "rating", f"{rating}.png")
 
 
 def get_color_by_rating(rating: float) -> int:

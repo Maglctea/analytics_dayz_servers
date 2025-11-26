@@ -3,8 +3,10 @@ import logging
 import os
 import sys
 from datetime import datetime
-import pytz
+from distutils.command.config import config
+
 import discord
+import pytz
 from discord import Interaction, User, ButtonStyle, Member, RawReactionActionEvent
 from discord.ext import commands, tasks
 from dishka import make_async_container, AsyncContainer, FromDishka
@@ -12,13 +14,11 @@ from dishka.integrations.faststream import inject, setup_dishka
 from faststream import FastStream
 from faststream.rabbit import RabbitBroker
 
+from dayz import config
 from dayz.application.interfaces.server import IPVPServerGateway, IPVEServerGateway
 from dayz.application.interfaces.uow import IUoW
-from dayz.domain.dto.configs.bot import BotConfig
-from dayz.domain.dto.configs.db import DBConfig
+from dayz.config import BotConfig, StorageConfig, BrokerConfig, AuthConfig, APIConfig, AdminConfig, DBConfig
 from dayz.domain.dto.server import ServerEmbedDTO, ServerDTO, CreateServerDTO
-from dayz.infrastructure.config_loader import load_config
-from dayz.infrastructure.di.config import BotConfigProvider
 from dayz.infrastructure.di.db import DbProvider
 from dayz.infrastructure.di.gateway import GatewaysProvider
 from dayz.presentation.bot.service.reactions import clear_user_reactions
@@ -37,18 +37,9 @@ container: AsyncContainer = ...
 broker = RabbitBroker(url=os.getenv('RABBITMQ_HOST'))
 app = FastStream(broker)
 
-db_config = load_config(
-    config_type=DBConfig,
-    config_scope='db',
-)
 
-bot_config = load_config(
-    config_type=BotConfig,
-    config_scope='bot',
-)
-
-
-async def add_server_process(server_gateway: IPVPServerGateway | IPVEServerGateway, uow: IUoW, server: CreateServerDTO, channel_embeds_id: int,
+async def add_server_process(server_gateway: IPVPServerGateway | IPVEServerGateway, uow: IUoW, server: CreateServerDTO,
+                             channel_embeds_id: int,
                              forum_feedback_id: int):
     server_data = ServerEmbedDTO(
         avatar_url=bot.user.avatar.url,
@@ -70,7 +61,8 @@ async def add_server_process(server_gateway: IPVPServerGateway | IPVEServerGatew
         title=server.name,
         description=f'Тут вы можете оставить отзыв или посмотреть информацию о сервере {server.name}'
     )
-    view_feedback_card = discord.ui.View().add_item(discord.ui.Button(emoji='🔗', label='Карточка сервера', url=server_card.jump_url))
+    view_feedback_card = discord.ui.View().add_item(
+        discord.ui.Button(emoji='🔗', label='Карточка сервера', url=server_card.jump_url))
 
     server_feedback_channel = await forum.create_thread(
         name=server.name,
@@ -78,7 +70,8 @@ async def add_server_process(server_gateway: IPVPServerGateway | IPVEServerGatew
         view=view_feedback_card
     )
 
-    view_server_card = discord.ui.View().add_item(discord.ui.Button(emoji='🔗', label='Отзывы сервера', url=server_feedback_channel.message.jump_url))
+    view_server_card = discord.ui.View().add_item(
+        discord.ui.Button(emoji='🔗', label='Отзывы сервера', url=server_feedback_channel.message.jump_url))
     await server_card.edit(embeds=server_card.embeds, view=view_server_card)
 
     await server_gateway.set_message_id(server.id, server_card.id)
@@ -92,7 +85,8 @@ async def add_pvp_server_handle(server: CreateServerDTO, config: FromDishka[BotC
     async with container() as request_container:
         pvp_server_gateway: IPVPServerGateway = await request_container.get(IPVPServerGateway)
         uow: IUoW = await request_container.get(IUoW)
-        await add_server_process(pvp_server_gateway, uow, server, config.pvp_channel_embeds_id, config.pvp_forum_feedback_id)
+        await add_server_process(pvp_server_gateway, uow, server, config.pvp_channel_embeds_id,
+                                 config.pvp_forum_feedback_id)
 
 
 @broker.subscriber("add_pve_server")
@@ -101,7 +95,8 @@ async def add_pve_server_handle(server: CreateServerDTO, config: FromDishka[BotC
     async with container() as request_container:
         pve_server_gateway: IPVEServerGateway = await request_container.get(IPVEServerGateway)
         uow: IUoW = await request_container.get(IUoW)
-        await add_server_process(pve_server_gateway, uow, server, config.pve_channel_embeds_id, config.pve_forum_feedback_id)
+        await add_server_process(pve_server_gateway, uow, server, config.pve_channel_embeds_id,
+                                 config.pve_forum_feedback_id)
 
 
 async def delete_server_process(server: ServerDTO, channel_embeds_id, forum_feedback_id):
@@ -135,7 +130,8 @@ async def on_ready():
 async def on_raw_reaction_add(payload: RawReactionActionEvent):
     user = payload.member
 
-    if payload.channel_id not in [bot_config.pvp_channel_embeds_id, bot_config.pve_channel_embeds_id] or user.bot:
+    if payload.channel_id not in [config.bot_config.pvp_channel_embeds_id,
+                                  config.bot_config.pve_channel_embeds_id] or user.bot:
         return
 
     message = await bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
@@ -153,9 +149,9 @@ async def on_raw_reaction_add(payload: RawReactionActionEvent):
 async def on_member_join(member: Member) -> None:
     message_author = await get_user_by_id(
         bot=bot,
-        user_id=bot_config.guildmaster_id
+        user_id=config.bot_config.guildmaster_id
     )
-    invite_code = bot_config.server_invite_code
+    invite_code = config.bot_config.server_invite_code
     embed = discord.Embed(
         description="""
             Приветствую тебя любитель DayZ RP!
@@ -183,7 +179,7 @@ async def on_member_join(member: Member) -> None:
         logging.exception(f'Error sending private message to {member}')
 
 
-@tasks.loop(minutes=bot_config.task_update_minute)
+@tasks.loop(minutes=config.bot_config.task_update_minute)
 async def update_server_banners():
     logger.info('Start embeds update')
 
@@ -192,21 +188,21 @@ async def update_server_banners():
         pve_server_gateway: IPVEServerGateway = await request_container.get(IPVEServerGateway)
         await update_embeds_service(
             bot=bot,
-            channel_id=bot_config.pvp_channel_embeds_id,
+            channel_id=config.bot_config.pvp_channel_embeds_id,
             server_gateway=pvp_server_gateway
         )
         await update_embeds_service(
             bot=bot,
-            channel_id=bot_config.pve_channel_embeds_id,
+            channel_id=config.bot_config.pve_channel_embeds_id,
             server_gateway=pve_server_gateway
         )
 
 
-@tasks.loop(hours=bot_config.top_update_hours)
+@tasks.loop(hours=config.bot_config.top_update_hours)
 async def update_server_top():
     moscow_tz = pytz.timezone('Europe/Moscow')
     date = datetime.now(tz=moscow_tz)
-    if date.day != bot_config.number_day_update_top:
+    if date.day != config.bot_config.number_day_update_top:
         return
 
     async with container() as request_container:
@@ -217,19 +213,19 @@ async def update_server_top():
             update_top(
                 server_gateway=pve_server_gateway,
                 bot=bot,
-                embed_channel_id=bot_config.pve_channel_embeds_id,
-                top_channel_id=bot_config.pve_channel_top_id,
-                required_reaction_count=bot_config.pve_required_reaction_count,
-                placing_count=bot_config.placing_top_count,
+                embed_channel_id=config.bot_config.pve_channel_embeds_id,
+                top_channel_id=config.bot_config.pve_channel_top_id,
+                required_reaction_count=config.bot_config.pve_required_reaction_count,
+                placing_count=config.bot_config.placing_top_count,
                 type='pve',
             ),
             update_top(
                 server_gateway=pvp_server_gateway,
                 bot=bot,
-                embed_channel_id=bot_config.pvp_channel_embeds_id,
-                top_channel_id=bot_config.pvp_channel_top_id,
-                required_reaction_count=bot_config.pvp_required_reaction_count,
-                placing_count=bot_config.placing_top_count,
+                embed_channel_id=config.bot_config.pvp_channel_embeds_id,
+                top_channel_id=config.bot_config.pvp_channel_top_id,
+                required_reaction_count=config.bot_config.pvp_required_reaction_count,
+                placing_count=config.bot_config.placing_top_count,
                 type='pvp',
             ),
         )
@@ -257,13 +253,13 @@ async def update(interaction: Interaction):
 
         await update_embeds_service(
             bot=bot,
-            channel_id=bot_config.pvp_channel_embeds_id,
+            channel_id=config.bot_config.pvp_channel_embeds_id,
             server_gateway=pvp_server_gateway
         )
 
         await update_embeds_service(
             bot=bot,
-            channel_id=bot_config.pve_channel_embeds_id,
+            channel_id=config.bot_config.pve_channel_embeds_id,
             server_gateway=pve_server_gateway
         )
 
@@ -271,7 +267,7 @@ async def update(interaction: Interaction):
 @bot.tree.command(
     name='clear_reactions',
     description='Удаляет все оценки пользователя',
-    guild=discord.Object(id=bot_config.guild_id)
+    guild=discord.Object(id=config.bot_config.guild_id)
 )
 @commands.has_permissions(administrator=True)
 async def clear_reactions(
@@ -310,7 +306,7 @@ async def clear_reactions(
 
     logs_embed = await clear_user_reactions(
         bot=bot,
-        id_channel=bot_config.pvp_channel_embeds_id,
+        id_channel=config.bot_config.pvp_channel_embeds_id,
         user=user
     )
     try:
@@ -321,24 +317,26 @@ async def clear_reactions(
         logger.exception(f'Ошибка отправки сообщения для {interaction.user}: {str(e)}')
 
 
-# async def run_bot(config: BotConfig):
-#     await bot.run(config.bot_token)
-
-
 def main() -> None:
     global container
 
     logger.info("Initializing DI")
     container = make_async_container(
-        BotConfigProvider(),
-        DbProvider(config=db_config),
+        DbProvider(),
         GatewaysProvider(),
+        context={
+            APIConfig: APIConfig(),
+            BotConfig: BotConfig(),
+            BrokerConfig: BrokerConfig(),
+            StorageConfig: StorageConfig(),
+            DBConfig: DBConfig(),
+        }
     )
     setup_dishka(container, app)
 
     logger.info("Initializing bot")
 
-    bot.run(bot_config.bot_token)
+    bot.run(config.bot_config.bot_token)
     print("Bot")
 
 

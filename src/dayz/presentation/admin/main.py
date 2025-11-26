@@ -12,12 +12,11 @@ from starlette_admin import I18nConfig
 from starlette_admin.contrib.sqla import Admin
 from starlette_admin.views import Link
 
-from dayz.domain.dto.configs.api import APIConfig
-from dayz.domain.dto.configs.auth import AuthConfig
-from dayz.domain.dto.configs.db import DBConfig
-from dayz.infrastructure.config_loader import load_config
+from dayz import config
+from dayz.config import AdminConfig, StorageConfig, BrokerConfig, BotConfig, DBConfig
+from dayz.config.api import APIConfig
+from dayz.config.auth import AuthConfig
 from dayz.infrastructure.db.models.server import PVPServer, PVEServer
-from dayz.infrastructure.di.config import AuthConfigProvider, AdminConfigProvider
 from dayz.infrastructure.di.db import DbProvider
 from dayz.infrastructure.di.gateway import GatewaysProvider
 from dayz.infrastructure.di.interactor import AdminInteractorProvider
@@ -102,49 +101,39 @@ async def run_api(
 
 
 async def main() -> None:
-    api_config = load_config(
-        config_type=APIConfig,
-        config_scope='api',
-    )
-
-    auth_config = load_config(
-        config_type=AuthConfig,
-        config_scope='auth',
-    )
-
-    db_config = load_config(
-        config_type=DBConfig,
-        config_scope='db',
-    )
-
     logger.info("Initializing DI")
 
     container = make_async_container(
-        AuthConfigProvider(),
-        AdminConfigProvider(),
-        DbProvider(config=db_config),
+        DbProvider(),
         GatewaysProvider(),
         AdminInteractorProvider(),
+        context={
+            AdminConfig: AdminConfig(),
+            AuthConfig: AuthConfig(),
+            BrokerConfig: BrokerConfig(),
+            StorageConfig: StorageConfig(),
+            DBConfig: DBConfig(),
+        }
 
     )
 
     logger.info("Initializing admin")
     app = init_api(
-        api_config=api_config,
-        auth_config=auth_config
+        api_config=config.api_config,
+        auth_config=config.auth_config
     )
     await setup_admin_app(
         app=app,
         container=container
     )
 
-    if api_config.debug:
+    if config.api_config.debug:
         logger.setLevel(logging.DEBUG)
         console_handler = logging.StreamHandler()
         logger.addHandler(console_handler)
 
     setup_dishka(container, app)
-    await run_api(app, api_config)
+    await run_api(app, config.api_config)
 
 
 if __name__ == '__main__':

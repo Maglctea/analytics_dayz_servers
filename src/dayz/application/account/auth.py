@@ -1,6 +1,5 @@
-from dayz.application.interfaces.uow import IUoW
 from dayz.application.interfaces.user import IUserGateway
-from dayz.domain.dto.configs.auth import AuthConfig
+from dayz.config.auth import AuthConfig
 from dayz.domain.exceptions.user import UserNotFoundException
 from dayz.infrastructure.auth.security import hash_secret, generate_jwt_token
 

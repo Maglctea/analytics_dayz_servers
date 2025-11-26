@@ -4,23 +4,19 @@ from dishka import Provider, Scope, provide
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, AsyncEngine
 
 from dayz.application.interfaces.uow import IUoW
-from dayz.domain.dto.configs.db import DBConfig
+from dayz.config import DBConfig
 from dayz.infrastructure.db.core import create_engine, create_session_factory
 from dayz.infrastructure.db.uow import UoW
 
 
 class DbProvider(Provider):
-    def __init__(self, config: DBConfig):
-        super().__init__()
-        self.config = config
-
     scope = Scope.APP
 
     @provide
-    async def get_engine(self) -> AsyncIterable[AsyncEngine]:
+    async def get_engine(self, db_config: DBConfig) -> AsyncIterable[AsyncEngine]:
         engine = create_engine(
-            full_url=self.config.full_url,
-            echo=self.config.echo
+            full_url=db_config.full_url,
+            echo=db_config.echo
         )
         yield engine
         await engine.dispose(True)

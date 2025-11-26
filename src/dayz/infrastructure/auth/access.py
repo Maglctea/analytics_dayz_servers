@@ -1,7 +1,7 @@
 from jose import JWTError
 
 from dayz.application.interfaces.user import IUserGateway
-from dayz.domain.dto.configs.auth import AuthConfig
+from dayz.config.auth import AuthConfig
 from dayz.domain.dto.user import UserData
 from dayz.domain.exceptions.user import AccessDeniedException
 from dayz.infrastructure.auth.security import parse_jwt_token

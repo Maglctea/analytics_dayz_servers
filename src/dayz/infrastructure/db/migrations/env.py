@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from dayz.domain.dto.configs.db import DBConfig
+from dayz.config import DBConfig
 from dayz.infrastructure.config_loader import load_config
 from dayz.infrastructure.db.models.base import BaseModel
 
@@ -19,12 +19,8 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-full_url = load_config(
-    config_type=DBConfig,
-    config_scope="db",
-).full_url
 
-config.set_main_option('sqlalchemy.url', full_url)
+config.set_main_option('sqlalchemy.url', DBConfig().full_url)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
