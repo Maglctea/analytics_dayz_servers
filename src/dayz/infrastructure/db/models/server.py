@@ -16,9 +16,9 @@ class PVPServer(BaseModel):
         nullable=False
     )
     name: Mapped[str] = mapped_column(unique=True)
-    address: Mapped[str]
-    port: Mapped[int]
-    query_port: Mapped[int]
+    address: Mapped[str| None]
+    port: Mapped[int | None]
+    query_port: Mapped[int | None]
     mode: Mapped[str]
     registration_type: Mapped[str]
     description: Mapped[str] = mapped_column(Text())
@@ -41,9 +41,9 @@ class PVEServer(BaseModel):
         nullable=False
     )
     name: Mapped[str] = mapped_column(unique=True)
-    address: Mapped[str]
-    port: Mapped[int]
-    query_port: Mapped[int]
+    address: Mapped[str| None]
+    port: Mapped[int | None]
+    query_port: Mapped[int | None]
     mode: Mapped[str]
     registration_type: Mapped[str]
     description: Mapped[str] = mapped_column(Text())
