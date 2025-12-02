@@ -7,7 +7,7 @@ class BaseServerDTO:
     name: str
     address: str
     port: int
-    query_port: int
+    query_port: int | None
     mode: str
     registration_type: str
     description: str
