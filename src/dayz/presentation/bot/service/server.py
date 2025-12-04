@@ -46,10 +46,13 @@ async def get_server_info(address: str, query_port: int) -> ServerBannerInfoDTO 
 
 async def get_embed(server_info: ServerEmbedDTO) -> Embed:
     server_data: CreateServerDTO = server_info.data
-    banner_info = await get_server_info(
-        address=server_data.address,
-        query_port=server_data.query_port
-    )
+    if server_data.address and server_data.query_port:
+        banner_info = await get_server_info(
+            address=server_data.address,
+            query_port=server_data.query_port
+        )
+    else:
+        banner_info = None
 
     embed = await build_embed(
         server_info=server_data,
@@ -79,10 +82,17 @@ async def update_embeds_service(
         rating_icon_path: str = get_rating_icon_path(rating)
         rating_icon_file = discord.File(rating_icon_path)
 
+        if server.address and server.query_port:
+            banner_info = await get_server_info(
+                address=server.address,
+                query_port=server.query_port
+            )
+        else:
+            banner_info = None
         try:
             embed = await build_embed(
                 server_info=server,
-                server_banner_info=await get_server_info(server.address, server.query_port),
+                server_banner_info=banner_info,
                 rating_icon_file=rating_icon_file,
                 bot_icon=bot.user.display_avatar.url,
             )
@@ -122,9 +132,18 @@ async def update_top(
     embeds = []
     for message in sorted_message_list[:placing_count]:
         server_data: ServerDTO = await server_gateway.get_server(message_id=message.id)
+
+        if server_data.address and server_data.query_port:
+            banner_info = await get_server_info(
+                address=server_data.address,
+                query_port=server_data.query_port
+            )
+        else:
+            banner_info = None
+
         embed = await bulid_top_embed(
             server_info=server_data,
-            server_banner_info=await get_server_info(server_data.address, server_data.query_port),
+            server_banner_info=banner_info,
             rating=round(get_rating(message), 1),
             bot_icon=bot.user.display_avatar.url,
         )
