@@ -5,6 +5,7 @@ from starlette.requests import Request
 from starlette_admin import fields
 from starlette_admin.contrib.sqla import ModelView
 
+from dayz.config import BrokerConfig
 from dayz.infrastructure.db.converter import model_to_server_converter
 from dayz.infrastructure.db.models.server import PVPServer
 
@@ -62,18 +63,20 @@ class PVPServerAdminView(ModelView):
     ]
     page_size = 50
 
+    broker_config: BrokerConfig = BrokerConfig()
+
     async def can_edit(self, request: Request) -> bool:
         return False
 
     async def after_create(self, request: Request, obj: PVPServer) -> None:
-        async with RabbitBroker(os.getenv('RABBITMQ_HOST')) as broker:
+        async with RabbitBroker(self.broker_config.url) as broker:
             await broker.publish(
                 model_to_server_converter(obj),
                 queue='add_pvp_server'
             )
 
     async def after_delete(self, request: Request, obj: PVPServer) -> None:
-        async with RabbitBroker(os.getenv('RABBITMQ_HOST')) as broker:
+        async with RabbitBroker(self.broker_config.url) as broker:
             await broker.publish(
                 model_to_server_converter(obj),
                 queue='delete_pvp_server'
