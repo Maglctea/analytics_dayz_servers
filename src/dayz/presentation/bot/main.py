@@ -34,7 +34,7 @@ bot = commands.Bot(
     intents=discord.Intents.all()
 )
 container: AsyncContainer = ...
-broker = RabbitBroker(url=config.broker_config.host)
+broker = RabbitBroker(url=config.broker_config.url)
 app = FastStream(broker)
 
 
