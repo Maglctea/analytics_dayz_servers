@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 class BrokerConfig(BaseSettings):
     user: str = 'admin'
     password: str
-    host: str = '127.0.0.1'
+    host: str = 'rabbitmq'
     port: int = 5672
 
     class Config:
