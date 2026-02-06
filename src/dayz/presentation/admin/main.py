@@ -13,10 +13,11 @@ from starlette_admin.contrib.sqla import Admin
 from starlette_admin.views import Link
 
 from dayz import config
-from dayz.config import AdminConfig, StorageConfig, BrokerConfig, BotConfig, DBConfig
+from dayz.config import AdminConfig, StorageConfig, BrokerConfig, DBConfig
 from dayz.config.api import APIConfig
 from dayz.config.auth import AuthConfig
 from dayz.infrastructure.db.models.server import PVPServer, PVEServer
+from dayz.infrastructure.di.broker import BrokerProvider
 from dayz.infrastructure.di.db import DbProvider
 from dayz.infrastructure.di.gateway import GatewaysProvider
 from dayz.infrastructure.di.interactor import AdminInteractorProvider
@@ -107,6 +108,7 @@ async def main() -> None:
         DbProvider(),
         GatewaysProvider(),
         AdminInteractorProvider(),
+        BrokerProvider(),
         context={
             AdminConfig: AdminConfig(),
             AuthConfig: AuthConfig(),

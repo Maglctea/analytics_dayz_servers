@@ -1,5 +1,4 @@
-import os
-
+from dishka import AsyncContainer
 from faststream.rabbit import RabbitBroker
 from starlette.requests import Request
 from starlette_admin import fields
@@ -69,15 +68,17 @@ class PVPServerAdminView(ModelView):
         return False
 
     async def after_create(self, request: Request, obj: PVPServer) -> None:
-        async with RabbitBroker(self.broker_config.url) as broker:
-            await broker.publish(
-                model_to_server_converter(obj),
-                queue='add_pvp_server'
-            )
+        ioc: AsyncContainer = request.state._state['dishka_container']
+        broker: RabbitBroker = await ioc.get(RabbitBroker)
+        await broker.publish(
+            model_to_server_converter(obj),
+            queue='add_pvp_server'
+        )
 
     async def after_delete(self, request: Request, obj: PVPServer) -> None:
-        async with RabbitBroker(self.broker_config.url) as broker:
-            await broker.publish(
-                model_to_server_converter(obj),
-                queue='delete_pvp_server'
-            )
+        ioc: AsyncContainer = request.state._state['dishka_container']
+        broker: RabbitBroker = await ioc.get(RabbitBroker)
+        await broker.publish(
+            model_to_server_converter(obj),
+            queue='delete_pvp_server'
+        )

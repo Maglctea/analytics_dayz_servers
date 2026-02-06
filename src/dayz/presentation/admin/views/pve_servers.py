@@ -1,10 +1,9 @@
-import os
-
+from dishka import AsyncContainer
 from faststream.rabbit import RabbitBroker
 from starlette.requests import Request
 from starlette_admin import fields
 from starlette_admin.contrib.sqla import ModelView
-from dayz import config
+
 from dayz.infrastructure.db.converter import model_to_server_converter
 from dayz.infrastructure.db.models.server import PVPServer, PVEServer
 
@@ -66,15 +65,17 @@ class PVEServerAdminView(ModelView):
         return False
 
     async def after_create(self, request: Request, obj: PVEServer) -> None:
-        async with RabbitBroker(config.broker_config.host) as broker:
-            await broker.publish(
-                model_to_server_converter(obj),
-                queue='add_pve_server'
-            )
+        ioc: AsyncContainer = request.state._state['dishka_container']
+        broker: RabbitBroker = await ioc.get(RabbitBroker)
+        await broker.publish(
+            model_to_server_converter(obj),
+            queue='add_pve_server'
+        )
 
     async def after_delete(self, request: Request, obj: PVEServer) -> None:
-        async with RabbitBroker(config.broker_config.host) as broker:
-            await broker.publish(
-                model_to_server_converter(obj),
-                queue='delete_pve_server'
-            )
+        ioc: AsyncContainer = request.state._state['dishka_container']
+        broker: RabbitBroker = await ioc.get(RabbitBroker)
+        await broker.publish(
+            model_to_server_converter(obj),
+            queue='delete_pve_server'
+        )
