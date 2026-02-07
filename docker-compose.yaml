@@ -81,7 +81,7 @@ services:
   loki:
     image: grafana/loki:latest
     expose:
-      - "3100:3100"
+      - 3100
     volumes:
       - ./deploy/loki/config.yaml:/etc/loki/config.yaml:ro
     command: -config.file=/etc/loki/config.yaml
