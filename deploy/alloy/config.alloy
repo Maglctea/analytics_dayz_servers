@@ -1,0 +1,80 @@
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+// ДИСКОВЕРИ Docker контейнеров
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+// ПЕРЕИМЕНОВАНИЕ меток (исправленные регулярки)
+discovery.relabel "docker_logs" {
+  targets = discovery.docker.containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "compose_service"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    target_label  = "project"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/[^-]+-([^-]+)-\\d+$"
+    target_label  = "service"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.+)"
+    target_label  = "container"
+  }
+}
+
+// СБОР ЛОГОВ
+loki.source.docker "docker_logs" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.docker_logs.output
+  forward_to = [loki.process.parse_logs.receiver]
+}
+
+// ОБРАБОТКА ЛОГОВ
+loki.process "parse_logs" {
+  // Сначала пробуем JSON
+  stage.json {
+    expressions = {
+      level   = "level",
+      message = "message",
+    }
+  }
+
+  // Затем регулярки для текстовых логов
+  stage.regex {
+    expression = "(?i)(?P<level>INFO|ERROR|WARNING|DEBUG|CRITICAL|WARN|FATAL|TRACE)"
+  }
+
+  // Делаем level меткой
+  stage.labels {
+    values = {
+      level = "level",
+    }
+  }
+
+  forward_to = [loki.write.to_loki.receiver]
+}
+
+// ОТПРАВКА В LOKI
+loki.write "to_loki" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+
+  external_labels = {
+    collector = "alloy",
+  }
+}

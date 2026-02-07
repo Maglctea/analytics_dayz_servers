@@ -2,6 +2,7 @@ services:
   bot:
     build:
       context: .
+      dockerfile: deploy/app/Dockerfile
     working_dir: /app/
     command: sh -c "alembic upgrade head && cd src && python -m dayz.presentation.bot.main"
     env_file:
@@ -35,6 +36,7 @@ services:
   admin_panel:
     build:
       context: .
+      dockerfile: deploy/app/Dockerfile
     working_dir: /app/src
     command: sh -c "python -m dayz.presentation.admin.main;"
     env_file:
@@ -62,5 +64,39 @@ services:
       - ./rabbitmq:/var/lib/rabbitmq
     restart: always
 
+  grafana:
+    image: grafana/grafana
+    ports:
+      - 3000:3000
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_DISABLE_INITIAL_ADMIN_CREATION=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/grafana/config/grafana.ini:/etc/grafana/grafana.ini:ro
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:latest
+    expose:
+      - "3100:3100"
+    volumes:
+      - ./deploy/loki/config.yaml:/etc/loki/config.yaml:ro
+    command: -config.file=/etc/loki/config.yaml
+
+  alloy:
+      image: grafana/alloy:latest
+      volumes:
+        - ./deploy/alloy/config.alloy:/etc/alloy/config.alloy
+        - /var/run/docker.sock:/var/run/docker.sock:ro
+      command: run /etc/alloy/config.alloy
+      environment:
+        - LOKI_URL=http://loki:3100/loki/api/v1/push
+      restart: unless-stopped
+
+
 volumes:
   postgresql-data:
+  grafana-data:
