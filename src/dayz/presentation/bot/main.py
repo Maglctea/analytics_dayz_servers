@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import os
 import sys
 from datetime import datetime
 from distutils.command.config import config
@@ -186,15 +185,19 @@ async def update_server_banners():
     async with container() as request_container:
         pvp_server_gateway: IPVPServerGateway = await request_container.get(IPVPServerGateway)
         pve_server_gateway: IPVEServerGateway = await request_container.get(IPVEServerGateway)
-        await update_embeds_service(
-            bot=bot,
-            channel_id=config.bot_config.pvp_channel_embeds_id,
-            server_gateway=pvp_server_gateway
-        )
-        await update_embeds_service(
-            bot=bot,
-            channel_id=config.bot_config.pve_channel_embeds_id,
-            server_gateway=pve_server_gateway
+
+        await asyncio.gather(
+            update_embeds_service(
+                bot=bot,
+                channel_id=config.bot_config.pvp_channel_embeds_id,
+                server_gateway=pvp_server_gateway
+            ),
+            update_embeds_service(
+                bot=bot,
+                channel_id=config.bot_config.pve_channel_embeds_id,
+                server_gateway=pve_server_gateway
+            ),
+            return_exceptions=True
         )
 
 
@@ -228,6 +231,7 @@ async def update_server_top():
                 placing_count=config.bot_config.placing_top_count,
                 type='pvp',
             ),
+            return_exceptions=True
         )
 
 
